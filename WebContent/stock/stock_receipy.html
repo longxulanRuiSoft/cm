@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<title>收货</title>
+		
+		<link rel="stylesheet" type="text/css" href="../css/cm-default.css"  />
+		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/Aqua/css/ligerui-all.css" />
+		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/ligerui-icons.css" />
+		<script src="../js/jquery.js" type="text/javascript"></script>
+		<script src="../ligerUI/js/ligerui.all.js" type="text/javascript"></script>
+		<script src="../js/common.js" type="text/javascript"></script>
+		<script src="../js/json2.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			var defGrid;
+			$(function(){
+               	defGrid = $("#query_list").ligerGrid({
+                    columns:[
+ 						{display:'操作',isSort:false,width:150,render:function(rowdata,rowindex,value) {
+ 							var h = "";
+ 							  h += "<a href='javascript:void(0);' class='opt-link' onclick='toPrint(" + rowindex + ")'>打印</a> ";
+ 							 var row = defGrid.getRow(rowindex);
+ 							 if(row.state == '21' )
+                               h += "待确认收货"; 
+                        	return h; 
+                        },frozen:true},
+                        {display:'单据状态',name:'state',width:90,minWidth:60,render:function(item){return paramRender(item,'stockBillSate',item.state);}},
+                        {display:'单据类型',name:'move_type',width:90,minWidth:60,render:function(item){return paramRender(item,'stockBillType',item.move_type);}},
+                        {display:'修改时间',name:'writedate',width:150},
+                        {display:'入库单号',name:'code',width:80,minWidth:60},
+	                    {display:'采购单号',name:'origin',width:80},
+			            {display:'供应商',name:'partner_id',render:sw_partner,width:70,align:'left'},
+			            //{display:'预计到货日期',name:'pred_date',width:80},
+			            {display:'入库仓库',name:'warehose_id',render:sw_warehose,width:90,align:'left'},
+			            {display:'收货人',name:'move_in_user',render:sw_opt,align:'left'},
+			            {display:'备注',name:'note',width:210}
+                    ],
+                    pageSize:20,
+                    usePager: true,
+                    width:'100%',
+                    height:'99%',
+                    dataAction:'server',
+                    checkbox:false,
+                    rownumbers:false,
+                    fixedCellHeight:false,
+                    colDraggable:true,
+                    enabledEdit:true,
+                    clickToEdit:false,
+                    onSelectRow:function(rowdata, rowindex){$("#txtrowindex").val(rowindex);},
+                    onReload: toQuery,
+                    param_movein:'user',
+                    param_warehose:'base_point',
+                    param_partner:'partner_list'
+                   
+				});
+				//appendAddBtn(openDictDef, "添加入库单");
+				appendModifyBtn(openModify, "修改入库单");
+				$("#pageloading").hide();
+				//默认查询全部数据 
+				toQuery();
+			});
+			
+			function sw_opt(item) {
+				var swd = paramRender(item, defGrid.options.param_movein, item.move_in_user);
+				if (!swd)
+					swd = item.move_in_user;
+				return swd;
+			}
+			function sw_warehose(item) {
+				var swd = paramRender(item, defGrid.options.param_warehose, item.warehose_id);
+				if (!swd)
+					swd = item.warehose_id;
+				return swd;
+			}
+			function sw_partner(item) {
+				var swd = paramRender(item, defGrid.options.param_partner, item.partner_id);
+				if (!swd)
+					swd = item.partner_id;
+				return swd;
+			}
+			function toQuery(item, page, pageSize) {
+				if (!page)
+					page = defGrid.options.page;
+				if (!pageSize)
+					pageSize = defGrid.options.pageSize;
+				
+				var param = new Object();
+				param.code = $("#codeQ").val();
+				param.origin = $("#originQ").val();
+				param.partner_id = $("#partnerQ").val();
+				param.state=$("#stateS").val();
+                     
+				var data = JSON.stringify(reqObj('q','stock.select.picking.query',JSON.stringify(param),'l',true,page,pageSize));
+				ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
+					defGrid.set({data: data['data']});
+				});
+			}
+			function openDictDef() {
+				parent.f_addTab('new_recei	py','新增入库单','./stock/new_stock_picking.html');
+			}
+			function Quality(rowid) {
+			   if(window.confirm('您确定要提交该项数据吗？')==true)
+		         
+				var row = defGrid.getRow(rowid);
+				//$('#id').val(row.id);
+				//$('#state').val(20);
+				var param1=new Object();
+				param1.id=row.id;
+				param1.state='20';
+				
+				 var param = JSON.stringify(reqObj('u','stock.update.picking_state.update',JSON.stringify(param1)));
+				
+					ajaxSubmit("/cm/rbac/cm.do?m=u", param, function(data) {
+						if (data) {
+							if (parseInt(data['status']) > 0) {
+								//$.ligerDialog.success('提交成功');
+								$("#quality").hide();
+								toQuery();
+							} else {
+								$.ligerDialog.error('提交失败');
+							}
+						}
+					});
+	        }
+			function openModify() {
+				var row = defGrid.getSelectedRow();
+				if (!row) {
+					$.ligerDialog.error('请先选择入库单记录。','错误');
+					return;
+				}
+				parent.f_addTab('receipy_stockp','收货维护','./stock/new_stock_receipy.html?o=m&code='.concat(row.code));
+			}
+			var printWin;
+			function toPrint(rowid) {
+				printWin = $.ligerDialog.open({height:600,width:800,url:'./print_stock_picking.html?id='.concat(defGrid.getRow(rowid).code),title:'打印入库单'});
+			}
+	    </script>
+		<style type="text/css">
+			label{margin: 5px 20px 5px 15px;}
+			.fields{height:35px;padding-top:5px;}
+			.dict-info{width: 260px;padding: 10px;}
+			.diff {margin:3px 0;}
+			.lineD {width:99%;float:left;position:relative;overflow:hidden;margin:10px 0 2px 2px}
+			.labelD {width:13%;position:relative;float:left;padding-top:3px;}
+			.dplD {width:36%;position:relative;float:left;}
+			.title{font-size:14px;font-weight:bold;background-position:left;padding-left:18px;}
+			.l-dialog-content-nopadding{padding:0 !important;}
+		</style>
+	</head>
+	<body style="padding:0;">
+	<input type="hidden" id="id" />
+	<input type="hidden" id="state" />
+		<div id="pageloading"></div>  
+		<div id="layout_main">
+			<div position="center" id="a_center" title="入库单列表">
+				<div id="query_cond" class="fields">
+					<label>入库单号</label><input type="text" class="s-text txt-def" id="codeQ" />
+					<label>采购订单号</label><input type="text" class="s-text txt-def" id="originQ" />
+					<label>供应商</label>
+					<select id="partnerQ" param="partner_list" first="" ></select>
+					<label>状态</label><select id="stateS" param="stockreceipy"  ></select>
+					<input type="button" value="查询" style="margin-left:25px;" onclick="toQuery();" />
+					<input type="button" value="清空" onclick="toReset('#codeQ,#originQ,#partnerQ');" />
+				</div>
+				<div id="query_list"></div>
+			</div>
+		</div>
+	</body>
+</html>

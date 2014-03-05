@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+	<bean id="keyGenerator" class="com.ruisoft.cm.rbac.util.KeyGenerator" lazy-init="false">
+		<property name="keyConfig">
+			<map>
+				<entry key="stock.picking.code">
+					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
+						<property name="rule" value="'KC'{date}{seq(2)}" />
+						<property name="circle" value="year" />
+						<property name="group" value="true" />
+					</bean>
+				</entry>
+				<entry key="stock.picking.out.code">
+					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
+						<property name="rule" value="'CK'{date}{seq(2)}" />
+						<property name="circle" value="year" />
+						<property name="group" value="true" />
+					</bean>
+				</entry>	
+				<!-- 原材料入库单编号规则 -->			
+				<entry key="stock.picking.ycl.rk.code">
+					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
+						<property name="rule" value="'YCLRK'{date}{seq(2)}" />
+						<property name="circle" value="year" />
+						<property name="group" value="true" />
+					</bean>
+				</entry>
+				<!-- 生产领用出库单编号规则 -->
+				<entry key="stock.picking.ly.ck.code">
+					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
+						<property name="rule" value="'SCCK'{date}{seq(2)}" />
+						<property name="circle" value="year" />
+						<property name="group" value="true" />
+					</bean>
+				</entry>
+
+				<entry key="stock.product.id">
+					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
+						<property name="rule" value="{seq(6)}" />
+					</bean>
+				</entry>
+				<entry key="stock.product.code">
+					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
+						<property name="rule" value="{$categ_id}{seq(4)}" />
+					</bean>
+				</entry>
+				<entry key="stock.picking_move.id">
+					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
+						<property name="rule" value="{$picking_id}{seq(6)}" />
+					</bean>
+				</entry>
+				<entry key="user.id">
+					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
+						<property name="rule" value="{seq(6)}" />
+						<property name="init" value="10" />
+					</bean>
+				</entry>
+				<entry key="org.id">
+					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
+						<property name="rule" value="{seq(6)}" />
+						<property name="init" value="10" />
+					</bean>
+				</entry>
+				<entry key="role.id">
+					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
+						<property name="rule" value="{seq(4)}" />
+						<property name="init" value="10" />
+					</bean>
+				</entry>
+				<entry key="menu.id">
+					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
+						<property name="rule" value="{seq(4)}" />
+						<property name="init" value="10" />
+					</bean>
+				</entry>
+				<entry key="dict.id">
+					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
+						<property name="rule" value="{seq(4)}" />
+						<property name="init" value="10" />
+					</bean>
+				</entry>
+				<entry key="dictitem.id">
+					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
+						<property name="rule" value="{seq(6)}" />
+						<property name="init" value="10" />
+					</bean>
+				</entry>				
+				<entry key="partner.id">
+					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
+						<property name="rule" value="{seq(6)}" />
+						<property name="init" value="10" />
+					</bean>
+				</entry>
+			</map>
+		</property>
+	</bean>
+</beans>

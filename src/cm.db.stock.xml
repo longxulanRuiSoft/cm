@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+	<bean id="stock" class="com.ruisoft.cm.rbac.util.DMLConfig">
+		<property name="select">
+			<map>
+				<entry key="picking.query">
+					<bean class="com.ruisoft.cm.rbac.entity.QueryEntity">
+						<property name="dmlType" value="cond" />
+						<property name="sql">
+							<value>
+<![CDATA[SELECT ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Partner_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser,Flow_State FROM Stock_Picking]]>
+							</value>
+						</property>
+						<property name="conditions">
+							<map>
+								<entry key="code" value=":like(lr)" />
+								<entry key="origin" value=":like(lr)" />
+								<entry key="partner_id" value=":like(lr)" />
+								<entry key="state" value="" />
+								<entry key="move_type" value="" />
+								<entry key="createuser" value="" />
+								<entry key="move_in_user" value="" />
+								<entry key="flow_state" value=":&gt;" />
+							</map>
+						</property>
+					</bean>
+				</entry>
+				<entry key="picking_product.query">
+					<bean class="com.ruisoft.cm.rbac.entity.QueryEntity">
+						<property name="dmlType" value="cond" />
+						<property name="sql">
+							<value>
+<![CDATA[SELECT ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Partner_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser,Flow_State FROM Stock_Picking ]]>
+							</value>
+						</property>
+						<property name="conditions">
+							<map>
+								<entry key="code" value=":like(lr)" />
+								<entry key="origin" value=":like(lr)" />
+								<entry key="move_type" value="" />
+								<entry key="state" value="" />
+							</map>
+						</property>
+					</bean>
+				</entry>
+				<entry key="picking_pocket.query">
+					<bean class="com.ruisoft.cm.rbac.entity.QueryEntity">
+						<property name="dmlType" value="cond" />
+						<property name="sql">
+							<value>
+<![CDATA[SELECT ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Partner_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser,Flow_State FROM Stock_Picking ]]>
+							</value>
+						</property>
+						<property name="conditions">
+							<map>
+								<entry key="code" value=":like(lr)" />
+								<entry key="origin" value=":like(lr)" />
+								<entry key="move_type" value="" />
+								<entry key="state" value="" />
+								<entry key="createuser" value="" />
+								<entry key="move_in_user" value="" />
+								
+							</map>
+						</property>
+						<property name="order" value="WriteDate"/>
+							 
+						<property name="desc" value="true"/>
+							 
+					</bean>
+				</entry>
+				<entry key="picking_nomal.query">
+					<bean class="com.ruisoft.cm.rbac.entity.QueryEntity">
+						<property name="dmlType" value="cond" />
+						<property name="sql">
+							<value>
+<![CDATA[SELECT ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Partner_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser,Flow_State FROM Stock_Picking ]]>
+							</value>
+						</property>
+						<property name="conditions">
+							<map>
+								<entry key="code" value=":like(lr)" />
+								<entry key="origin" value=":like(lr)" />
+								<entry key="move_type" value="" />
+								<entry key="state" value="" />
+								<entry key="createuser" value="" />
+								<entry key="move_in_user" value="" />
+							</map>
+						</property>
+						<property name="order" value="WriteDate"/>
+							 
+						<property name="desc" value="true"/>
+					</bean>
+				</entry>
+				<entry key="product.query">
+					<bean class="com.ruisoft.cm.rbac.entity.QueryEntity">
+						<property name="dmlType" value="cond" />
+						<property name="sql">
+							<value>
+<![CDATA[SELECT ID,COMPANY_ID,DEPT_ID,BUSIORG_ID,TYPE,CATEG_ID,CODE,NAME,SHORT_NAME,HELP_TAG,BAR_CODE,SPECS,BRAND,WARRANTY,UOM_ID,UOM_PRECISION,EACH_WEIGHT,WEIGHT_UNIT_ID,EACH_VOLUME,VOLUME_UNIT_ID,SUPPLY_METHOD,PURCHASE_OK,SALE_OK,SALE_DELAY,DESC_PURCHASE,PRODUCE_DELAY,PRODUCT_MANAGER,PROCURE_METHOD,COST_METHOD,DESC_SALE,LOC_RACK,LOC_ROW,STATE,NOTE,CREATECOMPANY_ID,CREATEDATE,CREATEUSER,WRITEDATE,WRITEUSER FROM PRODUCT_PRODUCT]]>
+							</value>
+						</property>
+						<property name="conditions">
+							<map>
+								<entry key="code" value=":like(lr)" />
+								<entry key="name" value=":like(lr)" />
+								<entry key="specs" value=":like(lr)" />
+							</map>
+						</property>
+					</bean>
+				</entry>
+
+				<entry key="move.query">
+					<bean class="com.ruisoft.cm.rbac.entity.QueryEntity">
+						<property name="dmlType" value="cond" />
+						<property name="sql">
+							<value>
+<![CDATA[SELECT Stock_Move.ID,Stock_Move.Company_ID,Stock_Move.Dept_ID,Stock_Move.BusiOrg_ID,Stock_Move.Picking_ID,Stock_Move.Origin,Stock_Move.Purchase_ID, Stock_Move.Purchase_Line_ID,Stock_Move.Sale_ID,Stock_Move.Sale_Line_ID,Stock_Move.Type,Stock_Move.Product_ID,Stock_Move.Code,Stock_Move.Name,product_product.Specs, Stock_Move.Ware_Hose_ID,Stock_Move.Location_ID, Stock_Move.Product_Uom, Stock_Move.Price_Currency, Stock_Move.Source_Price_Unit, Stock_Move.Price_Unit, Stock_Move.Tar_Product_Qty, Stock_Move.Product_Qty, Stock_Move.Pred_Date, Stock_Move.Real_Date, Stock_Move.Move_End_Date, Stock_Move.QC_Type, Stock_Move.QC_Flag, Stock_Move.State, Stock_Move.Inventory_State, Stock_Move.Valuation_State, Stock_Move.Busi_Batch, Stock_Move.Auto_Picking, Stock_Move.Note, Stock_Move.CreateUser, Stock_Move.CreateDate, Stock_Move.WriteDate, Stock_Move.WriteUser,Stock_Move.Brand  
+FROM Stock_Move
+LEFT JOIN product_product ON Stock_Move.Code=product_product.Code]]>
+							</value>
+						</property>
+						<property name="conditions">
+							<map>
+								<entry key="picking_id" value="" />
+								<entry key="name" value="str:like(lr):and" />
+								<entry key="origin" value=":like(lr)" />
+								<entry key="state" value="" />
+								<entry key="ware_hose_id" value="" />
+							</map>
+						</property>
+					</bean>
+				</entry>
+				<entry key="stock_qty.query">
+					<bean class="com.ruisoft.cm.rbac.entity.QueryEntity">
+						<property name="dmlType" value="cond" />
+						<property name="sql">
+							<value>
+<![CDATA[SELECT  Product_ID,Code,Name,Specs,Ware_Hose_ID,Product_Qty,Uom_ID FROM view_stock_qty]]>
+							</value>
+						</property>
+						<property name="conditions">
+							<map>
+								
+								<entry key="name" value="str:like(lr):and" />
+								<entry key="origin" value=":like(lr)" />
+								<entry key="state" value="" />
+								<entry key="ware_hose_id" value="" />
+							</map>
+						</property>
+					</bean>
+				</entry>
+			</map>
+		</property>
+		<property name="add">
+			<map>
+				<entry key="picking.add">
+					<bean class="com.ruisoft.cm.rbac.entity.AddEntity">
+						<property name="sql">
+							<value>
+<![CDATA[INSERT INTO Stock_Picking(ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Partner_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser,Flow_State)
+VALUES({#uuid},{company},{dept},{busiorg},{#stock.picking.ly.ck.code},{name},{type},{movetype},{sendtype},{origin},{purchase},{sale},{project},{partner},{warehose},{preddate},{recptindate},{qcdate},{recptoutdate},{dealenddate},{state},{invoicestate},{autopicking},{backorder},{accountdate},{stockjournal},{moveinuser},{moveoutuser},{movedestined},{note},{createuser},{createdate},{writedate},{writeuser},{flow_state})]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+				<!-- 原材料入库单 新增 数据SQL配置 -->
+				<entry key="yclrk.picking.add">
+					<bean class="com.ruisoft.cm.rbac.entity.AddEntity">
+						<property name="sql">
+							<value>
+<![CDATA[INSERT INTO Stock_Picking(ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Partner_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser,Flow_State)
+VALUES({#uuid},{company},{dept},{busiorg},{#stock.picking.ycl.rk.code},{name},{type},{movetype},{sendtype},{origin},{purchase},{sale},{project},{partner},{warehose},{preddate},{recptindate},{qcdate},{recptoutdate},{dealenddate},{state},{invoicestate},{autopicking},{backorder},{accountdate},{stockjournal},{moveinuser},{moveoutuser},{movedestined},{note},{createuser},{createdate},{writedate},{writeuser},{flow_state})]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+				
+					<entry key="picking_product.add">
+					<bean class="com.ruisoft.cm.rbac.entity.AddEntity">
+						<property name="sql">
+							<value>
+<![CDATA[INSERT INTO Stock_Picking(ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser)
+VALUES({#uuid},{company},{dept},{busiorg},{#stock.picking.code},{name},{type},{movetype},{sendtype},{origin},{purchase},{sale},{project},{warehose},{preddate},{recptindate},{qcdate},{recptoutdate},{dealenddate},{state},{invoicestate},{autopicking},{backorder},{accountdate},{stockjournal},{moveinuser},{moveoutuser},{movedestined},{note},{createuser},{createdate},{writedate},{writeuser})]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+				<entry key="picking_pocket.add">
+					<bean class="com.ruisoft.cm.rbac.entity.AddEntity">
+						<property name="sql">
+							<value>
+<![CDATA[INSERT INTO Stock_Picking(ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser)
+VALUES({#uuid},{company},{dept},{busiorg},{#stock.picking.code},{name},{type},{movetype},{sendtype},{origin},{purchase},{sale},{project},{warehose},{preddate},{recptindate},{qcdate},{recptoutdate},{dealenddate},{state},{invoicestate},{autopicking},{backorder},{accountdate},{stockjournal},{moveinuser},{moveoutuser},{movedestined},{note},{createuser},{createdate},{writedate},{writeuser})]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+				<entry key="picking_nomal.add">
+					<bean class="com.ruisoft.cm.rbac.entity.AddEntity">
+						<property name="sql">
+							<value>
+<![CDATA[INSERT INTO Stock_Picking(ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser)
+VALUES({#uuid},{company},{dept},{busiorg},{#stock.picking.code},{name},{type},{movetype},{sendtype},{origin},{purchase},{sale},{project},{warehose},{preddate},{recptindate},{qcdate},{recptoutdate},{dealenddate},{state},{invoicestate},{autopicking},{backorder},{accountdate},{stockjournal},{moveinuser},{moveoutuser},{movedestined},{note},{createuser},{createdate},{writedate},{writeuser})]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+					<entry key="picking_product.add">
+					<bean class="com.ruisoft.cm.rbac.entity.AddEntity">
+						<property name="sql">
+							<value>
+<![CDATA[INSERT INTO Stock_Picking(ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser)
+VALUES({#uuid},{company},{dept},{busiorg},{#stock.picking.code},{name},{type},{movetype},{sendtype},{origin},{purchase},{sale},{project},{warehose},{preddate},{recptindate},{qcdate},{recptoutdate},{dealenddate},{state},{invoicestate},{autopicking},{backorder},{accountdate},{stockjournal},{moveinuser},{moveoutuser},{movedestined},{note},{createuser},{createdate},{writedate},{writeuser})]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+				<entry key="picking_pocket.add">
+					<bean class="com.ruisoft.cm.rbac.entity.AddEntity">
+						<property name="sql">
+							<value>
+<![CDATA[INSERT INTO Stock_Picking(ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser,Flow_State)
+VALUES({#uuid},{company},{dept},{busiorg},{#stock.picking.code},{name},{type},{movetype},{sendtype},{origin},{purchase},{sale},{project},{warehose},{preddate},{recptindate},{qcdate},{recptoutdate},{dealenddate},{state},{invoicestate},{autopicking},{backorder},{accountdate},{stockjournal},{moveinuser},{moveoutuser},{movedestined},{note},{createuser},{createdate},{writedate},{writeuser},{flow_state})]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+				<entry key="picking_nomal.add">
+					<bean class="com.ruisoft.cm.rbac.entity.AddEntity">
+						<property name="sql">
+							<value>
+<![CDATA[INSERT INTO Stock_Picking(ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser,Flow_State)
+VALUES({#uuid},{company},{dept},{busiorg},{#stock.picking.code},{name},{type},{movetype},{sendtype},{origin},{purchase},{sale},{project},{warehose},{preddate},{recptindate},{qcdate},{recptoutdate},{dealenddate},{state},{invoicestate},{autopicking},{backorder},{accountdate},{stockjournal},{moveinuser},{moveoutuser},{movedestined},{note},{createuser},{createdate},{writedate},{writeuser},{flow_state})]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+				
+				<entry key="stock_move">
+					<bean class="com.ruisoft.cm.rbac.entity.AddEntity">
+						<property name="sql">
+							<value>
+<![CDATA[INSERT INTO STOCK_MOVE(ID,COMPANY_ID,DEPT_ID,BUSIORG_ID,PICKING_ID,ORIGIN,PURCHASE_ID,PURCHASE_LINE_ID,SALE_ID,SALE_LINE_ID,TYPE,PRODUCT_ID,CODE,NAME,PARTNER_ID,WARE_HOSE_ID,LOCATION_ID,PRODUCT_UOM,PRICE_CURRENCY,SOURCE_PRICE_UNIT,PRICE_UNIT,TAR_PRODUCT_QTY,PRODUCT_QTY,PRED_DATE,REAL_DATE,MOVE_END_DATE,QC_TYPE,QC_FLAG,STATE,INVENTORY_STATE,VALUATION_STATE,BUSI_BATCH,AUTO_PICKING,NOTE,CREATEUSER,CREATEDATE,WRITEDATE,WRITEUSER,Brand)
+VALUES({#stock.picking_move.id},{company_id},{dept_id},{busiorg_id},{picking_id},{origin},{purchase_id},{purchase_line_id},{sale_id},{sale_line_id},{type},{product_id},{code},{name},{partner_id},{ware_hose_id},{location_id},{product_uom},{price_currency},{source_price_unit},{price_unit},{tar_product_qty},{product_qty},{pred_date},{real_date},{move_end_date},{qc_type},{qc_flag},{state},{inventory_state},{valuation_state},{busi_batch},{auto_picking},{note},{createuser},{createdate},{writedate},{writeuser},{brand})]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+				<entry key="product">
+					<bean class="com.ruisoft.cm.rbac.entity.AddEntity">
+						<property name="sql">
+							<value>
+<![CDATA[INSERT INTO PRODUCT_PRODUCT(ID,Company_ID,Dept_ID,BusiOrg_ID,Type,Categ_ID,Code,Name,Short_Name,Help_Tag,Bar_Code,Specs,Brand,Warranty,Uom_ID,Uom_Precision,Each_Weight,Weight_Unit_ID,Each_Volume,Volume_Unit_ID,Supply_Method,Purchase_Ok,Sale_Ok,Sale_Delay,Desc_Purchase,Produce_Delay,Product_Manager,Procure_Method,Cost_Method,Desc_Feature,Desc_Sale,Loc_Rack,Loc_Row,State,Note,CreateCompany_ID,CreateDate,CreateUser,WriteDate,WriteUser)
+VALUES({#stock.product.id},{#session.USER_INFO.oid},{dept_id},{busiorg_id},{type},{categ_id},{#stock.product.code},{name},{short_name},{help_tag},{bar_code},{specs},{brand},{warranty},{uom_id},{uom_precision},{each_weight:double},{weight_unit_id},{each_volume:double},{volume_unit_id},{supply_method},{purchase_ok},{sale_ok},{sale_delay:int},{desc_purchase},{produce_delay:int},{product_manager},{procure_method},{cost_method},{desc},{desc_sale},{loc_rack},{loc_row},{state},{note},{#session.USER_INFO.oid},{#current_date},{#session.USER_INFO.uid},{writedate},{writeuser})]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+			</map>	
+		</property>
+		<property name="update">
+			<map>
+			<entry key="product">
+					<bean class="com.ruisoft.cm.rbac.entity.UpdateEntity">
+						<property name="sql">
+							<value>
+<![CDATA[UPDATE PRODUCT_PRODUCT SET NAME={name},BRAND={brand},SPECS={specs},UOM_ID={uom_id},UOM_PRECISION={uom_precision},TYPE={type},NOTE={note} WHERE CODE={code}]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+				<entry key="picking_state.update">
+					<bean class="com.ruisoft.cm.rbac.entity.UpdateEntity">
+						<property name="sql">
+							<value>
+<![CDATA[UPDATE Stock_Picking SET State={state},Flow_State={flow_state} WHERE ID={id}]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+					<entry key="stockpicking.update">
+					<bean class="com.ruisoft.cm.rbac.entity.UpdateEntity">
+						<property name="sql">
+							<value>
+<![CDATA[UPDATE Stock_Picking SET Origin={origin},Partner_ID={partner_id},Pred_Date={pred_date},
+Warehose_ID={warehose_id},Move_IN_User={move_in_user},Note={note},WriteUser={writeusercode}
+,WriteDate={writedate} WHERE Code={code}]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+				<entry key="picking">
+					<bean class="com.ruisoft.cm.rbac.entity.UpdateEntity">
+						<property name="sql">
+							<value>
+<![CDATA[UPDATE STOCK_PICKING SET ORIGIN={origin},PARTNER_ID={partner},PRED_DATE={preddate},WAREHOSE_ID={warehose},MOVE_IN_USER={moveinuser},NOTE={note},WriteUser={writeusercode}
+,WriteDate={writedate} WHERE CODE={code}]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+				<entry key="stock_move">
+					<bean class="com.ruisoft.cm.rbac.entity.UpdateEntity">
+						<property name="sql">
+							<value>
+<![CDATA[UPDATE STOCK_MOVE SET CODE={code},NAME={name},TAR_PRODUCT_QTY={tar_product_qty},PRODUCT_QTY={product_qty},ORIGIN={origin},PRODUCT_UOM={product_uom},SOURCE_PRICE_UNIT={source_price_unit},PRICE_UNIT={price_unit} WHERE ID={id}]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+			</map>	
+		</property>
+		<property name="delete">
+			<map>
+				<entry key="product">
+					<bean class="com.ruisoft.cm.rbac.entity.DeleteEntity">
+						<property name="sql">
+							<value>
+<![CDATA[DELETE FROM PRODUCT_PRODUCT WHERE CODE={code}]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+				<entry key="stock_move">
+					<bean class="com.ruisoft.cm.rbac.entity.DeleteEntity">
+						<property name="sql">
+							<value>
+<![CDATA[DELETE FROM stock_move WHERE ID={id}]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+				<entry key="stock_move.prckingid">
+					<bean class="com.ruisoft.cm.rbac.entity.DeleteEntity">
+						<property name="sql">
+							<value>
+<![CDATA[DELETE FROM stock_move WHERE Picking_id={code}]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+				<entry key="stock_picking.code">
+					<bean class="com.ruisoft.cm.rbac.entity.DeleteEntity">
+						<property name="sql">
+							<value>
+<![CDATA[DELETE FROM stock_picking WHERE code={code}]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+			</map>
+		</property>
+	</bean>
+</beans>

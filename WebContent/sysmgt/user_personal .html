@@ -1,0 +1,365 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<title>个人信息维护</title>
+		
+		<link rel="stylesheet" type="text/css" href="../css/cm-default.css"  />
+		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/Aqua/css/ligerui-all.css" />
+		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/ligerui-icons.css" />
+		<script src="../js/jquery.js" type="text/javascript"></script>
+		<script src="../ligerUI/js/ligerui.all.js" type="text/javascript"></script>
+		<script src="../js/common.js" type="text/javascript"></script>
+		<script src="../js/json2.js" type="text/javascript"></script>
+		<script type="text/javascript" src="../js/md5.js"></script>
+		<script type="text/javascript">
+			var defGrid;
+			var userid;
+			$(function(){
+	            
+				$("#layout_main").ligerLayout({
+                });
+
+               	defGrid = $("#query_list").ligerGrid({
+                    columns:[
+						{display:'操作',isSort:false,width:60,render:function(rowdata,rowindex,value) {
+                        	var h = "";
+                        	if (!rowdata._editing) {
+                                h += "<a href='javascript:void(0);' class='opt-link' onclick='beginEdit(" + rowindex + ")'>修改</a> ";
+                               // h += "<a href='javascript:void(0);' class='opt-link' onclick='deleteRow(" + rowindex + ")'>删除</a> "; 
+                            } else {
+                                h += "<a href='javascript:void(0);' class='opt-link' onclick='endEdit(" + rowindex + ")'>提交</a> ";
+                                h += "<a href='javascript:void(0);' class='opt-link' onclick='cancelEdit(" + rowindex + ")'>取消</a> "; 
+                            }
+                            return h;
+                        },frozen:true},
+                        {display:'账号',name:'account',width:80,minWidth:60,align:'left',editor:{type:'text'}},
+	                    {display:'用户名',name:'name',width:100,minWidth:60,align:'left',editor:{type:'text'}},
+	                    //{display:'所属机构',name:'orgid',width:80,minWidth:60,data:get_org_list,render:switcher_org,editor:{type:'select',data:get_org_list,textField:'name',valueField:'value',selectBoxHeight:50}},
+		               // {display:'状态',name:'status',width:70,data:status,render:switcher,editor:{type:'select',data:getStatus,textField:'name',valueField:'value',selectBoxHeight:50}},
+	                    {display:'密码修改',isSort:false,width:100,render:function(rowdata,rowindex,value){
+							return "<a href='javascript:void(0);' class='opt-link' onclick='open_Modfiy_PW(" + rowindex + ")'>密码修改</a>";
+			            }},
+			            //{display:'角色设置',isSort:false,width:100,render:function(rowdata,rowindex,value){
+							//return "<a href='javascript:void(0);' class='opt-link' onclick='open_Set_role(" + rowindex + ")'>角色设置</a>";
+			            //}},
+			            {display:'说明',name:'description',width:200,align:'left',editor:{type:'text'}}
+                    ],
+                    pageSize:10,
+                    usePager: true,
+                    sortName:'id',
+                    width:'100%',
+                    height:'100%',
+                    dataAction:'server',
+                    checkbox:false,
+                    rownumbers:false,
+                    fixedCellHeight:false,
+                    colDraggable:true,
+                    enabledEdit:true,
+                    clickToEdit:false,
+                    onSelectRow:function(rowdata, rowindex){$("#txtrowindex").val(rowindex);},
+//                     onUnSelectRow:unselected,
+                    onReload: toQuery,
+//                     onToFirst: toFirst,
+//                     onToLast: toLast,
+//                     onToNext: toNext,
+//                     onToPrev: toPrev,
+                    param_status:'rbac.status',
+                    param_org:'org_list'
+				});
+				defGrid.options.dataAction = 'server';
+				appendAddBtn(openUserDef, "添加用户");
+				$("#pageloading").hide();
+			
+				//var org_data = getData('org_list');
+				$("#org_combobox").ligerComboBox({
+					autocomplete: true,
+                	valueField:'value',
+                	textField:'name',
+                	data:get_org_list,
+                	onSelected:function(v,t) {
+                    $("#orgid").val(v);
+                }
+			});
+				ajaxSubmit("/cm/rbac/cmUser.do?method=getUserInfo", null, function(data) {
+					$('#createUserCodeS').val(data['uid']);
+				
+				}, null, false);
+
+				toQuery();
+			});
+	        function beginEdit(rowid) { 
+	        	defGrid.beginEdit(rowid);
+	        }
+	        function cancelEdit(rowid) { 
+	        	defGrid.cancelEdit(rowid);
+	        }
+	        function endEdit(rowid) {
+	            defGrid.endEdit(rowid);
+	            var row = defGrid.getRow(rowid);
+	            toModify(JSON.stringify(row));
+	        }
+	        function deleteRow(rowid) {
+	            $.ligerDialog.confirm('您确定要删除该项数据吗？', function(r) {
+		            if (!r)
+			            return;
+	                var row = defGrid.getRow(rowid);
+	                if (row['__status'] !== 'add')
+	                	toDel(JSON.stringify(row));
+	                defGrid.deleteRow(rowid);
+	            })
+	        }
+			function switcher(item) {
+				return paramRender(item, defGrid.options.param_status, item.status);
+			}
+			var getStatus = new function () {
+				return getData('rbac.status');
+			}
+			function switcher_org(item) {
+				return paramRender(item, defGrid.options.param_org, item.orgid);
+			}
+			var get_org_list=new function () {
+				return getData('org_list');
+			}
+ 
+			//用户的角色维护弹出窗
+			 function open_Set_role(rowid) {
+				 userid = defGrid.getRow(rowid)['id'];;
+				 var userName
+				 userName = defGrid.getRow(rowid)['name'];;
+		            parent.f_addTab('user_role'+userName+'','角色维护('+userName+')','./sysmgt/user_role.html?userid='+userid+'');
+		            
+		        }
+			function toQuery(item, page, pageSize) {
+				if (!page)
+					page = defGrid.options.page;
+				if (!pageSize)
+					pageSize = defGrid.options.pageSize;
+				
+				var param = new Object();
+			   // param.account=$("#AccountCode").val();
+				//param.name = $("#userName").val();
+				
+				//param.status = $("#dictStatus").val();
+				 param.id=$("#createUserCodeS").val()
+				var data = JSON.stringify(reqObj('q','rbac.select.dict.def.queryUser',JSON.stringify(param),'l',true,page,pageSize));
+				ajaxSubmit("/cm/rbac/cm.do?m=q", data, function(data) {
+					defGrid.set({data: data['data']});
+				});
+			}
+			function toFirst() {
+				toQuery(null, 1);
+			}
+			function toLast() {
+				var p = parseInt(defGrid.options.total / defGrid.options.pageSize);
+				if (defGrid.options.total % defGrid.options.pageSize > 0)
+					p += 1;
+				toQuery(null, p);
+			}
+			function toNext() {
+				var p = parseInt(defGrid.options.total / defGrid.options.pageSize);
+				if (defGrid.options.total % defGrid.options.pageSize > 0)
+					p += 1;
+				if (defGrid.options.page == p)
+					return;
+				toQuery(null, defGrid.options.page + 1);
+			}
+			function toPrev() {
+				if (defGrid.options.page == 1)
+					return;
+				toQuery(null, defGrid.options.page - 1);
+			}
+			//新增用户弹出窗口
+			var addDialog;
+			function openUserDef() {
+				toReset('#new_user_def input,select,textarea');
+				addDialog = $.ligerDialog.open({
+					target:$("#new_user_def"),
+					title:"新增用户",
+					width:450,
+					height:550
+				});
+			}
+			//密码修改窗口
+			function open_Modfiy_PW(rowid) {
+	        	userid = defGrid.getRow(rowid)['id'];;
+	        	if (userid) {
+		        	toReset('#up_dict_pw input,select,textarea');
+					addDialog = $.ligerDialog.open({
+						target:$("#up_dict_pw"),
+						title:"密码修改",
+						width:350,
+						height:370
+					});
+	        	}
+			}
+			//修改密码时，两次密码一致性校验。不一致时，弹出窗口
+			function toupdatepw()
+			{  
+				var pwd1=$("#password1").val();
+				var pwd2=$("#password2").val();
+				if(pwd1!=pwd2)
+				{
+					$.ligerDialog.success('两次密码不一致请重新输入！');
+					return;
+				}
+				var parampw = new Object();
+				parampw.id=userid;
+				parampw.pwd =hex_md5(pwd1).toUpperCase() ;
+				
+				var param = JSON.stringify(reqObj('u','rbac.update.dict.def.updateuserpd',JSON.stringify(parampw)));
+			    
+				ajaxSubmit("/cm/rbac/cm.do?m=u", param, function(data) {
+				if (data) {
+					if (parseInt(data['status']) > 0) {
+						$.ligerDialog.success('保存成功');
+						addDialog.hide();
+					} else {
+						$.ligerDialog.error('保存失败');
+					}
+				}
+			});}
+			// 新增保存处理
+			function toAdd() {
+				//return alert($("#orgid").val());
+				var param = new Object();
+				param.code=$("#account").val();
+			    param.account=$("#account").val();
+				param.name = $("#newName").val();
+				param.password = hex_md5($("#password").val()).toUpperCase();
+				param.orgid=$("#orgid").val();
+				param.status = $("#newStatus").val();
+				param.desc=$("#newDesc").val();
+				var data = JSON.stringify(reqObj('a','rbac.add.dict.def.addUser',JSON.stringify(param)));
+				
+				ajaxSubmit("/cm/rbac/cm.do?m=a", data, function(data) {
+					if (data) {
+						//alert(parseInt(data['status']));
+						if (parseInt(data['status']) > 0) {
+							$.ligerDialog.success('保存成功', '操作完成', function() {
+							addDialog.hide();
+							toQuery();
+						});
+						} else if (parseInt(data['status']) == -1) {
+							$.ligerDialog.error('用户[' + $("#newName").val() + ']已存在<br>不能重复添加','错误');
+						} else {
+							$.ligerDialog.error('保存失败');
+						}
+					}
+				});
+			}
+			
+		   function toModify(row) {
+				
+				 var param = JSON.stringify(reqObj('u','rbac.update.dict.def.updateuser',row));
+					//alert(param);
+					ajaxSubmit("/cm/rbac/cm.do?m=u", param, function(data) {
+						if (data) {
+							if (parseInt(data['status']) > 0) {
+								$.ligerDialog.success('保存成功');
+							} else {
+								$.ligerDialog.error('保存失败');
+							}
+						}
+					});
+			}
+		   //删除时，判断此用户下是否已设置角色信息，删除时提示，将删除用户的角色设置信息
+		   //确认删除时，将用户下的角色设置信息一并删除。
+			function toDel(row) {
+				 var param = JSON.stringify(reqObj('d','rbac.delete.dict.def.deleteuser',row));
+					ajaxSubmit("/cm/rbac/cm.do?m=d", param, function(data) {
+						if (data) {
+							if (parseInt(data['status']) > 0) {
+								$.ligerDialog.success('删除成功');
+							} else {
+								$.ligerDialog.error('删除失败');
+							}
+						}
+					});
+			}
+                
+			
+	    </script>
+		<style type="text/css">
+			label{margin: 5px 20px 5px 15px;}
+			.fields{height:35px;padding-top:5px;}
+			.dict-info{width: 260px;padding: 10px;}
+			.diff {margin:3px 0;}
+			.lineD {width:99%;float:left;position:relative;overflow:hidden;margin:10px 0 2px 2px}
+			.labelD {width:26%;position:relative;float:left;padding-top:3px;}
+			.dplD {width:73%;position:relative;float:left;}
+			.title{font-size:14px;font-weight:bold;background-position:left;padding-left:18px;}
+		</style>
+	</head>
+	<body style="padding:0;">
+	<input type="hidden" id="createUserCodeS" />
+		<div id="pageloading"></div>  
+		<div id="layout_main">
+			<div position="center" id="a_center" title="用户列表">
+				
+				<div id="query_list"></div>
+			</div>
+		</div>
+		<div id="new_user_def" style="display:none;overflow:hidden;">
+			<div class="lineD" style="margin-bottom:10px;">
+				<span class="title l-icon-add">添加用户</span>
+			</div>
+			<!--  <div class="lineD">
+				<div class="labelD"><label>编号</label></div>
+				<div class="dplD"><input type="text" class="s-text txt-def" id="code" /></div>
+			</div>
+			-->
+			<div class="lineD">
+				<div class="labelD"><label>账号</label></div>
+				<div class="dplD"><input type="text" class="s-text txt-def" id="account" /></div>
+			</div>
+			<div class="lineD">
+				<div class="labelD"><label>用户名</label></div>
+				<div class="dplD"><input type="text" class="s-text txt-def" id="newName" /></div>
+			</div>
+			<div class="lineD">
+				<div class="labelD"><label>密码</label></div>
+				<div class="dplD"><input type="password" class="s-text txt-def" id="password" /></div>
+			</div>
+			<div class="lineD">
+				<div class="labelD"><label>机构</label></div>
+			<div class="dplD">
+			<input type="text" id="org_combobox" ltype="combobox" class="diff" validate="{required:true,minlength:3,maxlength:10,notnull:true}" nullText="不能为空!"/></div>
+						<input type="hidden" id="orgid" />
+			<!--  <select class="txt-def" id="orgid" param="rbac.status" default="1" style="margin-right: 30px;"></select></div>
+			-->
+			</div>
+			<div class="lineD">
+				<div class="labelD"><label>状态</label></div>
+				<div class="dplD"><select class="txt-def" id="newStatus" param="rbac.status" default="1" style="margin-right: 30px;"></select></div>
+			</div>
+			<div class="lineD">
+				<div class="labelD"><label>说明</label></div>
+				<div class="dplD"><textarea cols="24" rows="5" id="newDesc"></textarea></div>
+			</div>
+			<div class="lineD" style="margin-top:15px;padding-left:30%;">
+				<input type="button" value="保存" onclick="toAdd();" />
+				<input type="button" value="清空" onclick="toReset('#new_user_def input,select,textarea')" />
+			</div>
+		</div>
+		
+		<div id="up_dict_pw" style="display:none;overflow:hidden;">
+			<div class="lineD" style="margin-bottom:10px;">
+				<span class="title l-icon-add">密码修改</span>
+			</div>
+					
+			<div class="lineD">
+				<div class="labelD"><label>新密码</label></div>
+				<div class="dplD"><input type="password" class="s-text txt-def" id="password1" /></div>
+			</div>
+		<div class="lineD">
+				<div class="labelD"><label>确认密码</label></div>
+				<div class="dplD"><input type="password" class="s-text txt-def" id="password2" /></div>
+			</div>
+			<div class="lineD" style="margin-top:15px;padding-left:30%;">
+				<input type="button" value="保存" onclick="toupdatepw();" />
+				<input type="button" value="清空" onclick="toReset('#up_dict_pw input,select,textarea')" />
+			</div>
+		</div>
+	</body>
+</html>

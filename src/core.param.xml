@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+	<bean id="paramGenerator" class="com.ruisoft.core.param.ParamGenerator" lazy-init="false">
+		<property name="config">
+			<map>
+				<!-- 查询系统用户,可按机构代码查询 -->
+				<entry key="user">
+					<bean class="com.ruisoft.core.param.SQLParamEntity">
+						<property name="sql">
+							<bean class="com.ruisoft.cm.rbac.entity.QueryEntity">
+								<property name="dmlType" value="cond" />
+								<property name="sql">
+									<value><![CDATA[SELECT NAME,ID VALUE,ID SEQ,STATUS FROM CM_USER]]></value>
+								</property>
+								<property name="conditions">
+									<map>
+										<entry key="orgid" value="" />
+									</map>
+								</property>
+							</bean>
+						</property>
+					</bean>
+				</entry>
+				<!-- 查询商品类型 -->
+				<entry key="product.type">
+					<bean class="com.ruisoft.core.param.SQLParamEntity">
+						<property name="sql">
+							<bean class="com.ruisoft.cm.rbac.entity.QueryEntity">
+								<property name="sql">
+									<value><![CDATA[SELECT NAME,CODE,ID VALUE,'1' SEQ,'1' STATUS,SUBSTR(PATH,LENGTH(PATH)-3) PID,DETAIL LEAF FROM PRODUCT_CATEGORY]]></value>
+								</property>
+							</bean>
+						</property>
+						<property name="treeAttr" value="pid" />
+					</bean>
+				</entry>
+				<entry key="product.type2">
+					<bean class="com.ruisoft.core.param.SQLParamEntity">
+						<property name="sql">
+							<bean class="com.ruisoft.cm.rbac.entity.QueryEntity">
+								<property name="sql">
+									<value><![CDATA[SELECT NAME,CODE VALUE,'1' SEQ,'1' STATUS FROM PRODUCT_CATEGORY]]></value>
+								</property>
+							</bean>
+						</property>
+						<property name="cache" value="true" />
+					</bean>
+				</entry>
+				<entry key="org_list">
+					<bean class="com.ruisoft.core.param.SQLParamEntity">
+						<property name="sql">
+							<bean class="com.ruisoft.cm.rbac.entity.QueryEntity">
+								<property name="dmlType" value="cond" />
+								<property name="sql">
+									<value><![CDATA[SELECT NAME,ID VALUE,ID SEQ,STATUS FROM CM_ORG]]></value>
+								</property>
+								<property name="conditions">
+									<map>
+										<entry key="orgid" value="int" />
+									</map>
+								</property>
+							</bean>
+						</property>
+					</bean>
+				</entry>	
+				<entry key="partner_list">
+					<bean class="com.ruisoft.core.param.SQLParamEntity">
+						<property name="sql">
+							<bean class="com.ruisoft.cm.rbac.entity.QueryEntity">
+								<property name="dmlType" value="cond" />
+								<property name="sql">
+									<value><![CDATA[SELECT NAME,ID VALUE,ID SEQ,'1' STATUS FROM cm_partner]]></value>
+								</property>
+								<property name="conditions">
+									<map>
+										<entry key="orgid" value="int" />
+									</map>
+								</property>
+							</bean>
+						</property>
+					</bean>
+				</entry>								
+			</map>
+		</property>
+	</bean>
+</beans>

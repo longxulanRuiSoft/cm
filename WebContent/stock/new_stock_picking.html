@@ -1,0 +1,433 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<title>新增入库单</title>
+		
+		<link rel="stylesheet" type="text/css" href="../css/cm-default.css"  />
+		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/Aqua/css/ligerui-all.css" />
+		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/ligerui-icons.css" />
+		<script src="../js/jquery.js" type="text/javascript"></script>
+		<script src="../js/validate/jquery.validate.js" type="text/javascript"></script>
+		<script src="../js/validate/jquery.metadata.js" type="text/javascript"></script>
+		<script src="../js/validate/messages_zh.js" type="text/javascript"></script>
+		<script src="../ligerUI/js/ligerui.all.js" type="text/javascript"></script>
+		<script src="../js/common.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			var pGrid, opt, c_code;
+			var udata, pdata;
+			$(function(){
+				udata = getData('user',{orgid:$("#deptCodeS").val()},false);
+				getPData();
+				
+				$("#layout_main").ligerLayout({
+					bottomHeight: "46%",
+					allowBottomResize:false
+                });
+ 				$("form").ligerForm();
+				$(".l-textarea").each(function(index){
+					$(this).removeClass("l-textarea");
+				});
+				$("#d-menu").ligerToolBar({items:[
+				    {text:'保存',click:toAdd,icon:'save'},
+					{line:true},
+					{text:'返回',click:toBack,icon:'back'},
+				    {line:true},
+				    {text:'清空',click:resetArea,icon:'clear'},
+					{line:true}
+				]});
+               	pGrid = $("#p-div").ligerGrid({
+                    columns:[
+						{display:'商品编号',name:'code',width:90,editor:{type:'popup',onButtonClick:selectProduct},textField:'code',valueField:'code'},
+	                    {display:'品名',name:'name',width:190},
+			            {display:'规格/型号',name:'specs',width:100},
+			            {display:'单位',name:'product_uom',width:60,render:function(item){return paramRender(item,'uom',item.product_uom);}},
+			            {display:'品牌',name:'brand',width:60,render:function(item){return paramRender(item,'brand',item.brand);},editor:{type:'select',data:getData('Brand'),valueField:'value',textField:'name'}},
+			            {display:'采购数量',name:'tar_product_qty',align:'right',editor:{type:'string'},render:function(item){return item.tar_product_qty ? parseFloat(item.tar_product_qty).toFixed(0) : '';}},
+			            {display:'入库数量',name:'product_qty',id:'num',align:'right',editor:{type:'string'},render:function(item){return item.product_qty ? parseFloat(item.product_qty).toFixed(0) : '';}},
+			            {display:'采购单价',name:'source_price_unit',align:'right',editor:{type:'string'},render:function(item){return item.source_price_unit ? parseFloat(item.source_price_unit).toFixed(2) : '';}},
+			            {display:'入库单价',name:'price_unit',id:'price',align:'right',editor:{type:'string'},render:function(item){return item.price_unit ? parseFloat(item.price_unit).toFixed(2) : '';}},
+			            {display:'金额',name:'total',id:'total',align:'right',render:calcTotal}
+                    ],
+                    pageSize:20,
+                    usePager: true,
+                    width:'100%',
+                    height:'99%',
+                    checkbox:false,
+                    rownumbers:false,
+                    fixedCellHeight:false,
+                    colDraggable:false,
+                    enabledEdit:true,
+                    clickToEdit:true,
+                    onSelectRow:function(rowdata, rowindex){$("#txtrowindex").val(rowindex);},
+                    onReload: queryProd,
+                    param_partner:'partner_list'
+				});
+				appendAddBtn(function(){
+					pGrid.addEditRow();
+ 					$(".l-grid2 .l-grid-body-inner").attr("style", "");
+				}, "添加商品明细");
+				appendDeleteBtn(deleteRow, "删除商品明细");
+
+				var str = window.location.toString().replace(/^[^?]+\??/, "");
+				if (str) {
+					var ss = str.split('&');
+					var query = new Object();
+					for (var i = 0; i < ss.length; i++) {
+						eval('query.'.concat(ss[i].split('=')[0]).concat('="').concat(ss[i].split('=')[1]).concat('"'));
+					}
+					opt = query['o'];
+					c_code = query['code'];
+
+					if (opt === 'm') {
+						var param = {code:c_code};
+						var data = JSON.stringify(reqObj('q','stock.select.picking.query',JSON.stringify(param)));
+						ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
+							bindVal(data['data']);
+						}, null, false);
+						
+						param = {picking_id:c_code};
+						data = JSON.stringify(reqObj('q','stock.select.move.query',JSON.stringify(param)));
+						ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
+							pGrid.set({data: data['data']});
+						}, null, false);
+
+						ajaxSubmit("/cm/rbac/cmUser.do?method=getUserInfo", null, function(data) {
+							$('#WriteUserCodeS').val(data['uid']);
+							$("#WriteDateS").val(data['date']);
+						}, null, false);
+					}
+				} else {
+					ajaxSubmit("/cm/rbac/cmUser.do?method=getUserInfo", null, function(data) {
+						$('#deptS').val(data['oname']);
+						$('#deptCodeS').val(data['oid']);
+						$('#createUserS').val(data['uname']);
+						$('#createUserCodeS').val(data['uid']);
+						$("#createDateS").val(data['date']);
+						$("#WriteDateS").val(data['date']);
+					}, null, false);
+				}
+				var moveInBox = $("#moveInS").ligerComboBox({
+					autocomplete: true,
+                    valueField:'value',
+                    textField:'name',
+                    data:udata,
+                    onSelected:function(v,t) {
+                        $("#moveInIdS").val(v);
+                    }
+				});
+				$("#warehouseInS").ligerComboBox({
+					autocomplete: false,
+                    valueField:'value',
+                    textField:'name',
+                    data:get_warehose_list,
+                    onSelected:function(v,t) {
+                        $("#warehouseS").val(v);
+                    }
+				});
+				$("#partnerInS").ligerComboBox({
+					autocomplete: true,
+                    valueField:'value',
+                    textField:'name',
+                    data:get_partner_list,
+                    onSelected:function(v,t) {
+                        $("#partnerS").val(v);
+                    }
+				});
+				$("#pageloading").hide();
+			});
+			
+			var get_warehose_list=new function () {
+				return getData('base_point');
+			}
+			var get_partner_list=new function () {
+				return getData('partner_list');
+			}
+			function resetArea() {
+				toReset('#a_center input:not(.readonly),select,textarea');
+			}
+			function selectProduct() {
+				var selDialog = $.ligerDialog.open({height:500,width:650,isResize:false,url:'../sysmgt/product_query2.html?o=s',title:'选择商品',
+					buttons: [
+						{text:'确定',onclick: function(item, dialog){
+							var data = dialog.frame.getSelectedRow();
+				            if (!data) {
+				                $.ligerDialog.warn('请选择商品!');
+				                return;
+				            }
+				            pGrid.endEdit();
+				            pGrid.updateCell('name', data.name, pGrid.getSelected());
+				            pGrid.updateCell('specs', data.specs, pGrid.getSelected());
+				            pGrid.updateCell('product_uom', data.uom_id, pGrid.getSelected());
+				            pGrid.updateCell('code', data.code, pGrid.getSelected());
+				            dialog.close();
+						}},
+					    {text:'取消',onclick: function(item, dialog){
+					    	dialog.close();
+						}}
+				]});
+				return false;
+			}
+			function bindVal(data) {
+				if (data.Rows && data.Rows.length === 1) {
+					data = data.Rows[0];
+					$('#codeS').val(data.code);
+					$('#originS').val(data.origin);
+					$('#partnerInS').val(paramRender(null,'partner_list',data.partner_id));
+					$('#partnerS').val(data.partner_id);
+					$('#predDateS').val(data.pred_date);
+					$('#warehouseInS').val(paramRender(null,'base_point',data.warehose_id));
+					$('#warehouseS').val(data.warehose_id);
+					$('#moveInS').val(paramRender(null,'user',data.move_in_user));
+					$('#moveInIdS').val(data.move_in_user);
+					$('#noteS').val(data.note);
+					$('#deptS').val(paramRender(null,'org_list',data.dept_id));
+					$('#deptCodeS').val(data.dept_id);
+					$('#createUserS').val(paramRender(null,'user',data.createuser));
+					$('#createUserCodeS').val(data.createuser);
+					$('#createDateS').val(data.createdate);
+				}
+			}
+			function queryProd() {
+				var data = JSON.stringify(reqObj('q','stock.select.move.query',JSON.stringify({picking_id:c_code})));
+				ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
+					pGrid.set({data: data['data']});
+				}, null, false);
+			}
+			//界面的返回处理，实际是关闭标签处理。
+		    function toBack()  {
+		    	//关闭修改界面
+		    	parent.tabManager.removeTabItem("modify_stockp");
+		       	//关闭新增界面
+		    	parent.tabManager.removeTabItem("new_stockp");
+			}			
+			function toAdd() {
+				// 必输数据项校验控制
+				var valid = true;
+				$('*[id$="S"],*[id$="S_txt"]').each(function(index, element) {
+					if (!$(this).rules()) return;
+					if (!$(element).valid()) {
+						valid = false;
+						return;
+					}
+				});
+				if (!valid) return;
+				if (pGrid.rows.length === 0) {
+					$.ligerDialog.error('请添加入库商品。','错误');
+					return;
+				}
+				
+				var param = {
+					origin:$("#originS").val(),
+					partner:$("#partnerS").val(),
+					preddate:$("#predDateS").val(),
+					warehose:$("#warehouseS").val(),
+					moveinuser:$("#moveInIdS").val(),
+					note:$("#noteS").val()
+				};
+				var en = 'stock.add.yclrk.picking.add', optType = 'a';
+				if (opt === 'm') {
+					param.code = $('#codeS').val();
+					//修改人
+					param.writeusercode=$('#WriteUserCodeS').val();
+					//修改日期
+					param.writedate=$('#WriteDateS').val();
+					// 进行修改数据库处理
+					en = 'stock.update.picking';
+					// 操作类型为 update
+					optType = 'u';
+				} else {
+					// 新增时 数据处理
+					param.company = "";
+					param.dept = $("#deptCodeS").val();
+					param.busiorg = "";
+					param.name = "";
+					param.type = "0";
+					param.createuser = $("#createUserCodeS").val();
+					param.createdate = $("#createDateS").val();
+					param.movetype="01";
+					param.state="00";
+					param.flow_state="00";
+					param.writedate=$('#WriteDateS').val();
+				}
+				var data = JSON.stringify(reqObj(optType,en,JSON.stringify(param)));
+				ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
+					var rows = pGrid.rows;
+					if (opt === 'm') {
+						var addRows = [], updateRows = [];
+						for (var i = 0; i < rows.length; i++) {
+							if (rows[i].__status === 'add') {
+								rows[i].picking_id = $('#codeS').val();
+								rows[i].origin = $('#originS').val();
+								rows[i].type = '0';
+								rows[i].createuser = $('#createUserCodeS').val();
+								rows[i].createdate = $('#createDateS').val();
+								rows[i].dept_id = $('#deptCodeS').val();
+								rows[i].company_id = '';
+								rows[i].busiorg_id = '';
+								addRows.push(rows[i]);
+							} else if (rows[i].__status === 'update') {
+								updateRows.push(rows[i]);
+							}
+						}
+						var ar = 0, br = 0;
+						if (addRows.length > 0) {
+							var data_a = JSON.stringify(reqObj('ba','stock.add.stock_move',addRows));
+							ajaxSubmit("/cm/rbac/cm.do?m=ba", data_a, function(result) {
+								ar = result['status'];
+								if (updateRows.length === 0)
+									$.ligerDialog.success('保存成功', '操作完成', reloadPage);
+							}, null, false);
+						} else {
+							ar = 1;
+						}
+						if (ar > 0 && updateRows.length > 0) {
+							var data_u = JSON.stringify(reqObj('bu','stock.update.stock_move', updateRows));
+							ajaxSubmit("/cm/rbac/cm.do?m=bu", data_u, function(result) {
+								$.ligerDialog.success('保存成功', '操作完成', reloadPage);
+								br = result['status'];
+							});
+						} else {
+							br = 1;
+						}
+						if (ar > 0 && br > 0) {
+							$.ligerDialog.success('保存成功', '操作完成', reloadPage);
+						}
+					} else {
+						// 新增处理
+						var picking = data['added'];
+						c_code = picking['#stock.picking.ycl.rk.code'];
+						for (var i = 0; i < rows.length; i++) {
+							rows[i].picking_id = c_code;
+							rows[i].origin = $('#originS').val();
+							rows[i].type = '0';
+							rows[i].createuser = $('#createUserCodeS').val();
+							rows[i].createdate = $('#createDateS').val();
+							rows[i].dept_id = $('#deptCodeS').val();
+							rows[i].company_id = '';
+							rows[i].busiorg_id = '';
+						}
+						var data = JSON.stringify(reqObj('ba','stock.add.stock_move',rows));
+						ajaxSubmit("/cm/rbac/cm.do?m=ba", data, function(data) {
+							$.ligerDialog.success('保存成功', '操作完成', reloadPage);
+						});
+					}
+				});
+			}
+	        function toEdit(rowid) {
+		        alert(rowid);
+	        	pGrid.beginEdit(rowid);
+	        }
+	        function cancelEdit(rowid) { 
+	        	pGrid.cancelEdit(rowid);
+	        }
+	        function reloadPage() {
+	        	window.location = './new_stock_picking.html?o=m&code='.concat(c_code);
+		    }
+	        function deleteRow() {
+	        	var row = pGrid.getSelectedRow();
+				if (!row) {
+					$.ligerDialog.error('请先选择入库商品记录。','错误');
+					return;
+				}
+	            $.ligerDialog.confirm('您确定要删除该项数据吗？', function(r) {
+		            if (!r)
+			            return;
+		        	if (row.__status === 'add') {
+		        		pGrid.deleteRow(row);
+		        		if (pGrid.row && pGrid.row.length === 0)
+			        		pGrid.data = {};
+		        		return;
+			        }
+	                var param = new Object();
+	                param.id = row.id
+	                var data = JSON.stringify(reqObj('d','stock.delete.stock_move',JSON.stringify(param)));
+    				ajaxSubmit("/cm/rbac/cm.do?m=d", data, function(data) {
+    					if (data) {
+    						if (parseInt(data['status']) > 0) {
+    							$.ligerDialog.success('删除成功');
+				                pGrid.deleteRow(row);
+    						} else {
+    							$.ligerDialog.error('删除失败');
+    						}
+    					}
+    				});
+	            });
+	        }
+			function calcTotal(item) {
+				if (item.product_qty && item.price_unit) {
+					return (parseFloat(item.product_qty) * parseFloat(item.price_unit)).toFixed(2);
+				}
+				return '0.00';
+			}
+			function getPData() {
+				var data = JSON.stringify(reqObj('q','stock.select.product.query','{}','l',false));
+				ajaxSubmit("/cm/rbac/cm.do?m=q", data, function(data) {
+					pdata = data['data'];
+				}, null, false);
+			}
+	    </script>
+		<style type="text/css">
+			.center-height{height: 100%;}
+		</style>
+	</head>
+	<body style="padding:0;">
+		<div id="pageloading"></div>  
+		<div id="layout_main">
+			<div position="center" id="a_center" title="基本信息" style="overflow:auto;">
+				<div id="d-menu" class="toolbar"></div>
+				<div style="height:25px;"></div>
+				<form name="basic-form" method="post" id="basic_form" class="liger-form" data-validate="{}">
+					<div class="line-div">
+						<div class="label-div"><label>入库单号</label></div>
+						<div class="in-div"><input type="text" id="codeS" ltype="text" class="readonly diff" readonly="readonly" value="由系统自动生成" /></div>
+						<div class="label-div"><label>采购申请单号</label></div>
+						<div class="in-div"><input type="text" id="originS" ltype="text" class="required diff" /></div>
+					</div>
+                	<div class="line-div">
+						<div class="label-div"><label>供应商</label></div>
+						<div class="in-div">
+						<input type="text" id="partnerInS" ltype="combobox" class="required diff" />
+						<input type="hidden" id="partnerS" />
+						</div>
+						<div class="label-div"> <label>预计到货日期</label></div>
+						<div class="in-div"><input type="text" id="predDateS" ltype="date" class="required diff" /></div>
+					</div>
+                	<div class="line-div">
+						<div class="label-div"><label>入库仓库</label></div>
+						<div class="in-div"> 
+						<input type="text" id="warehouseInS" ltype="combobox" class="required diff" />
+						<input type="hidden" id="warehouseS" />
+						</div>
+						<div class="label-div"><label>收货人</label></div>
+						<div class="in-div"><input type="text" id="moveInS" ltype="combobox" class="required diff" /></div>
+						<input type="hidden" id="moveInIdS" />
+					</div>
+					<div class="line-div" style="height:50px;">
+						<div class="label-div"><label>备注</label></div>
+						<div class="in-div" style="width:72%;">
+							<textarea cols="73" rows="2" id="noteS"></textarea>
+						</div>
+					</div>
+					<div class="line-div">
+						<div class="label-div"><label>制单部门</label></div>
+						<div class="in-div"><input type="text" id="deptS" ltype="text" class="readonly diff" readonly="readonly" /></div>
+						<input type="hidden" id="deptCodeS" />
+						<div class="label-div"><label>制单人</label></div>
+						<div class="in-div"><input type="text" id="createUserS" ltype="text" class="readonly diff" readonly="readonly" /></div>
+						<input type="hidden" id="createUserCodeS" />
+							<input type="hidden" id="WriteUserCodeS" />
+							<input type="hidden" id="WriteDateS" />
+					</div>
+					<div class="line-div">
+						<div class="label-div"><label>制单时间</label></div>
+						<div class="in-div"><input type="text" id="createDateS" ltype="text" class="readonly diff" readonly="readonly" /></div>
+					</div>
+			    </form>
+			</div>
+			<div position="bottom" id="a_right" title="选择入库商品">
+				<div id="p-div"></div>
+			</div>
+		</div>
+	</body>
+</html>

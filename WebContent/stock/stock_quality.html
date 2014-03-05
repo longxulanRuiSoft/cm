@@ -1,0 +1,271 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<title>质检</title>
+		
+		<link rel="stylesheet" type="text/css" href="../css/cm-default.css"  />
+		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/Aqua/css/ligerui-all.css" />
+		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/ligerui-icons.css" />
+		<script src="../js/jquery.js" type="text/javascript"></script>
+		<script src="../ligerUI/js/ligerui.all.js" type="text/javascript"></script>
+		<script src="../js/common.js" type="text/javascript"></script>
+		<script src="../js/json2.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			var defGrid;
+			$(function(){
+               	defGrid = $("#query_list").ligerGrid({
+                    columns:[
+ 						{display:'操作',isSort:false,width:150,render:function(rowdata,rowindex,value) {
+ 							var h = "";
+ 							//  h += "<a href='javascript:void(0);' class='opt-link' onclick='toPrint(" + rowindex + ")'>打印</a> ";
+ 							 var row = defGrid.getRow(rowindex);
+ 							// 单据状态 state    入库制单  00 新建  10 未审核 20 已审核 30 未提交 40已提交      50 已驳回
+ 							//               质检  60 未审核   70 已审核  80 质检未完成 90 质检完成 100 提交入库 
+ 							//               入库  110 打印入库单    120 确认入库   130 入库完成
+ 							// 流程状态 flow_state 00 新建（制单） 10 入库质检     20 入、出库审核   30 打印出入库单   40 入、出库确认    50 入、出库完成 
+ 							if(row.state >= 70 ) 
+						  	{
+							  h += "已审核  ";
+						  	}
+						  else 
+							{
+							  h += "<a href='javascript:void(0);' id='submitToPick' class='opt-link' onclick='toConfirm(" + rowindex + ")'>审核</a> ";
+							}
+ 							if(row.state<80 && row.flow_state<=10)
+ 							  {
+ 								h += "待质检  ";
+ 							  }
+ 							else {
+ 								h += "已质检  ";
+ 							  }
+						 if(row.state<100 && row.flow_state<=10)
+						  {
+							 h += "<a href='javascript:void(0);' id='to_quality' class='opt-link' onclick='submitToPick(" + rowindex + ")'>提交入库</a> ";
+						  }
+						 else{
+							 h += "已提交入库";
+						 }
+//  							 if(row.state == '12') 
+// 							  {
+// 								  h += "已审核  ";
+// 							  }
+// 							  else
+// 							 {
+// 							  h += "<a href='javascript:void(0);' id='submitToPick' class='opt-link' onclick='submitSH(" + rowindex + ")'>审核</a> ";
+// 							  }
+//  							 if(row.state == '10'||row.state == '12'  )
+//                                h += "<a href='javascript:void(0);' id='submitToPick' class='opt-link' onclick='submitToPick(" + rowindex + ")'>提交入库</a> "; 
+                        	return h; 
+                        },frozen:true},
+			            {display:'单据状态',name:'state',width:90,minWidth:60,render:function(item){return paramRender(item,'stockBillSate',item.state);}},
+                        //{display:'单据类型',name:'move_type',width:90,minWidth:60,render:function(item){return paramRender(item,'stockBillType',item.move_type);}},
+                        {display:'修改时间',name:'writedate',width:130},
+                        {display:'入库单号',name:'code',width:130,minWidth:60},
+	                    {display:'采购申请单号',name:'origin',width:130},
+			            {display:'供应商',name:'partner_id',render:sw_partner,width:190,align:'left'},
+			            {display:'预计到货日期',name:'pred_date',width:80},
+			            {display:'入库仓库',name:'warehose_id',render:sw_warehose,width:80},
+			            {display:'收货人',name:'move_in_user',render:sw_opt,width:80},
+			            {display:'入库异常',name:'move_in_user',width:80},
+			            {display:'备注',width:200,name:'note',align:'left'}
+                    ],
+                    pageSize:20,
+                    usePager: true,
+                    width:'100%',
+                    height:'99%',
+                    dataAction:'server',
+                    checkbox:false,
+                    rownumbers:false,
+                    fixedCellHeight:false,
+                    colDraggable:true,
+                    enabledEdit:true,
+                    clickToEdit:false,
+                    onSelectRow:function(rowdata, rowindex){$("#txtrowindex").val(rowindex);},
+                    onReload: toQuery,
+                    param_movein:'user',
+                    param_warehose:'base_point',
+                    param_partner:'partner_list'
+				});
+				//appendAddBtn(openDictDef, "添加入库单");
+				appendModifyBtn(openModify, "修改入库单");
+				$("#pageloading").hide();
+				//默认查询全部数据 
+				toQuery();
+			});
+			function sw_opt(item) {
+				var swd = paramRender(item, defGrid.options.param_movein, item.move_in_user);
+				if (!swd)
+					swd = item.move_in_user;
+				return swd;
+			}
+			function sw_warehose(item) {
+				var swd = paramRender(item, defGrid.options.param_warehose, item.warehose_id);
+				if (!swd)
+					swd = item.warehose_id;
+				return swd;
+			}
+			function sw_partner(item) {
+				var swd = paramRender(item, defGrid.options.param_partner, item.partner_id);
+				if (!swd)
+					swd = item.partner_id;
+				return swd;
+			}
+			function toQuery(item, page, pageSize) {
+				if (!page)
+					page = defGrid.options.page;
+				if (!pageSize)
+					pageSize = defGrid.options.pageSize;
+				
+				var param = new Object();
+				param.code = $("#codeQ").val();
+				param.origin = $("#originQ").val();
+				param.partner_id = $("#partnerQ").val();
+				//param.state=$("#stateS").val();
+				param.move_type='01';
+				var data = JSON.stringify(reqObj('q','stock.select.picking.query',JSON.stringify(param),'l',true,page,pageSize));
+				ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
+					defGrid.set({data: data['data']});
+				});
+			}
+			function openDictDef() {
+				parent.f_addTab('new_stockp','新增入库单','./stock/new_stock_picking.html');
+			}
+			function submitToPick(rowid) {
+				var row = defGrid.getRow(rowid);
+			//	alert(row.state);
+				if(row.state<90)
+					{
+					$.ligerDialog.error('该单据未确认质检，请先质检！');
+					return;
+					}
+			   if(window.confirm('您确定要提交该项数据吗？')==true)
+				   {
+				$('#id').val(row.id);
+				$('#state').val(100);
+				var param1=new Object();
+				param1.id=$('#id').val();
+				param1.state=$('#state').val();
+				param1.flow_state='30';
+				 var param = JSON.stringify(reqObj('u','stock.update.picking_state.update',JSON.stringify(param1)));
+				
+					ajaxSubmit("/cm/rbac/cm.do?m=u", param, function(data) {
+						if (data) {
+							if (parseInt(data['status']) > 0) {
+								$.ligerDialog.success('提交成功');
+								//$("#submitToPick").hide();
+								toQuery();
+							} else {
+								$.ligerDialog.error('提交失败');
+							}
+						}
+					});
+				   }
+	        }
+			function openModify() {
+				var row = defGrid.getSelectedRow();
+				if (!row) {
+					$.ligerDialog.error('请先选择入库单记录。','错误');
+					return;
+				}
+				parent.f_addTab('quality_stockp','质检单维护','./stock/new_stock_quality.html?o=m&code='.concat(row.code));
+			}
+			var printWin;
+			function toPrint(rowid) {
+				printWin = $.ligerDialog.open({height:600,width:800,url:'./print_stock_picking.html?id='.concat(defGrid.getRow(rowid).code),title:'打印入库单'});
+			}
+			function submitSH(rowid)
+			 {
+				 var row = defGrid.getRow(rowid);
+				// alert(row.state);
+				 
+				 if(row.state=='11')
+			     {
+					 $.ligerDialog.error('该单据未质检，请先质检！');
+						return;
+				  }
+					//$('#id').val(row.id);
+					// 待发货状态--- 31---
+					//$('#state').val(31);
+					var param1=new Object();
+					param1.id=row.id;
+					param1.state='12';
+					
+					 var param = JSON.stringify(reqObj('u','stock.update.picking_state.update',JSON.stringify(param1)));
+					
+						ajaxSubmit("/cm/rbac/cm.do?m=u", param, function(data) {
+							if (data) {
+								if (parseInt(data['status']) > 0) {
+									//$.ligerDialog.success('提交成功');
+									//$("#submitToPick").hide();
+									toQuery();
+								} else {
+									$.ligerDialog.error('提交失败');
+								}
+							}
+						});
+			 }
+			// 审核确认
+			function toConfirm(rowid) {
+				var row = defGrid.getRow(rowid);
+				var param1=new Object();
+			     	param1.id=row.id;
+					//已审核 20
+					param1.state="70";
+                    param1.flow_state=row.flow_state;
+                    
+					upPickingDel(param1,'审核成功','审核失败');
+			
+		        }
+			function upPickingDel(param1,successInfo,errorInfo){
+				
+				 var param = JSON.stringify(reqObj('u','stock.update.picking_state.update',JSON.stringify(param1)));
+					
+					ajaxSubmit("/cm/rbac/cm.do?m=u", param, function(data) {
+						if (data) {
+							if (parseInt(data['status']) > 0) {	
+								
+								$.ligerDialog.success(successInfo);
+								//自动刷新
+								toQuery();
+							} else {								
+								$.ligerDialog.error(errorInfo);
+							}
+						}
+					});
+				
+				
+			}
+	    </script>
+		<style type="text/css">
+			label{margin: 5px 20px 5px 15px;}
+			.fields{height:35px;padding-top:5px;}
+			.dict-info{width: 260px;padding: 10px;}
+			.diff {margin:3px 0;}
+			.lineD {width:99%;float:left;position:relative;overflow:hidden;margin:10px 0 2px 2px}
+			.labelD {width:13%;position:relative;float:left;padding-top:3px;}
+			.dplD {width:36%;position:relative;float:left;}
+			.title{font-size:14px;font-weight:bold;background-position:left;padding-left:18px;}
+			.l-dialog-content-nopadding{padding:0 !important;}
+		</style>
+	</head>
+	<body style="padding:0;">
+	<input type="hidden" id="id" />
+	<input type="hidden" id="state" />
+		<div id="pageloading"></div>  
+		<div id="layout_main">
+			<div position="center" id="a_center" title="入库单列表">
+				<div id="query_cond" class="fields">
+					<label>入库单号</label><input type="text" class="s-text-qCond txt-def" id="codeQ" />
+					<label>采购订单号</label><input type="text" class="s-text-qCond txt-def" id="originQ" />
+					<label>供应商</label>
+					<select id="partnerQ" param="partner_list" first="" ></select>
+					<label>状态</label><select id="stateS" param="stockquality"  ></select>
+					<input type="button" value="查询" style="margin-left:25px;" onclick="toQuery();" />
+					<input type="button" value="清空" onclick="toReset('#codeQ,#originQ,#partnerQ');" />
+				</div>
+				<div id="query_list"></div>
+			</div>
+		</div>
+	</body>
+</html>

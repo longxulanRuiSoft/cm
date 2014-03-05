@@ -1,0 +1,315 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<title>菜单维护</title>
+		
+		<link rel="stylesheet" type="text/css" href="../css/cm-default.css"  />
+		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/Aqua/css/ligerui-all.css" />
+		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/ligerui-icons.css" />
+		<script src="../js/jquery.js" type="text/javascript"></script>
+		<script src="../ligerUI/js/ligerui.all.js" type="text/javascript"></script>
+		<script src="../js/common.js" type="text/javascript"></script>
+		<script src="../js/json2.js" type="text/javascript"></script>
+		<script type="text/javascript" src="../js/md5.js"></script>
+		<script type="text/javascript">
+			var defGrid;
+			var userid;
+			$(function(){
+				$("#layout_main").ligerLayout({
+                });
+
+               	defGrid = $("#query_list").ligerGrid({
+                    columns:[
+						{display:'操作',isSort:false,width:60,render:function(rowdata,rowindex,value) {
+                        	var h = "";
+                        	if (!rowdata._editing) {
+                                h += "<a href='javascript:void(0);' class='opt-link' onclick='beginEdit(" + rowindex + ")'>修改</a> ";
+                                h += "<a href='javascript:void(0);' class='opt-link' onclick='deleteRow(" + rowindex + ")'>删除</a> "; 
+                            } else {
+                                h += "<a href='javascript:void(0);' class='opt-link' onclick='endEdit(" + rowindex + ")'>提交</a> ";
+                                h += "<a href='javascript:void(0);' class='opt-link' onclick='cancelEdit(" + rowindex + ")'>取消</a> "; 
+                            }
+                            return h;
+                        },frozen:true},
+                        {display:'编号',name:'code',width:80,minWidth:60,align:'left',editor:{type:'text'}},
+                        {display:'名称',name:'name',width:80,minWidth:60,align:'left',editor:{type:'text'}},
+	                    
+                        {display:'上级菜单编号',name:'higher_id',width:10,minWidth:60,align:'left',editor:{type:'text'}},
+                        {display:'显示顺序',name:'seq',width:80,minWidth:60,align:'left',editor:{type:'text'}},
+                        {display:'资源编号',name:'resource_id',width:80,minWidth:60,align:'left',editor:{type:'text'}},
+                        {display:'图标',name:'icon_uri',width:80,minWidth:60,align:'left',editor:{type:'text'}},
+                        {display:'提示信息',name:'hint',width:80,minWidth:60,align:'left',editor:{type:'text'}},
+                        {display:'分级码',name:'path',width:80,minWidth:60,align:'left',editor:{type:'text'}},
+                        {display:'级数',name:'layer',width:80,minWidth:60,align:'left',editor:{type:'text'}},
+	                   
+	                    {display:'明细否',name:'detail',width:70,data:getdetail,render:switcher_detail,editor:{type:'select',data:getdetail,textField:'name',valueField:'value',selectBoxHeight:50}},
+	                    {display:'状态',name:'status',width:70,data:status,render:switcher,editor:{type:'select',data:getStatus,textField:'name',valueField:'value',selectBoxHeight:50}},
+	                    {display:'说明',name:'descriptioin',width:200,align:'left',editor:{type:'text'}}
+                    ],
+                    pageSize:10,
+                    usePager: true,
+                    sortName:'id',            
+                    dataAction:'server',
+                    //wws 2014-2-23 增加分页信息 
+                    url: '../common/q.jsp',                     
+                    width:'100%',
+                    height:'99%',
+                    //wws 2014-2-23 增加分页信息 end
+                    checkbox:false,
+                    rownumbers:false,
+                    fixedCellHeight:false,
+                    colDraggable:true,
+                    enabledEdit:true,
+                    clickToEdit:false,
+                    onSelectRow:function(rowdata, rowindex){$("#txtrowindex").val(rowindex);},
+//                     onUnSelectRow:unselected,
+                    onReload: toQuery,
+                    //wws 2014-2-23 增加分页信息 start
+                    onToFirst: function(item) {
+                        toQuery(item, 1);
+                    },
+                    onToLast: function(item) {
+        				var p = parseInt(defGrid.options.total / defGrid.options.pageSize);
+        				if (defGrid.options.total % defGrid.options.pageSize > 0)
+        					p += 1;
+        				toQuery(item, p);
+                    },
+                    onToPrev: function(item) {
+        				var p = parseInt(defGrid.options.page);
+        				if (p > 1)
+        					p -= 1;
+        				else
+            				return;
+        				toQuery(item, p);
+                    },
+                    onToNext: function(item) {
+                    	var p = parseInt(defGrid.options.total / defGrid.options.pageSize);
+        				if (defGrid.options.total % defGrid.options.pageSize > 0)
+        					p += 1;
+    					var cp = parseInt(defGrid.options.page); 
+    					if (cp < p)
+        					cp += 1;
+        				toQuery(item, cp);
+                    },
+        		    //wws 2014-2-23 增加分页信息 end 
+                    param_status:'rbac.status',
+                    param_detail:'yesOrNo'
+                   
+				});
+				defGrid.options.dataAction = 'server';
+				appendAddBtn(openDictDef, "添加字典字义");
+				$("#pageloading").hide();
+				//默认查询全部数据 
+				toQuery();
+			});
+	        function beginEdit(rowid) { 
+	        	defGrid.beginEdit(rowid);
+	        }
+	        function cancelEdit(rowid) { 
+	        	defGrid.cancelEdit(rowid);
+	        }
+	        function endEdit(rowid) {
+	            defGrid.endEdit(rowid);
+	            var row = defGrid.getRow(rowid);
+	            toModify(JSON.stringify(row));
+	        }
+	        function deleteRow(rowid) {
+	            $.ligerDialog.confirm('您确定要删除该项数据吗？', function(r) {
+		            if (!r)
+			            return;
+	                var row = defGrid.getRow(rowid);
+	                if (row['__status'] !== 'add')
+	                	toDel(JSON.stringify(row));
+	                defGrid.deleteRow(rowid);
+	            })
+	        }
+			function switcher(item) {
+				return paramRender(item, defGrid.options.param_status, item.status);
+			}
+			var getStatus = new function () {
+				return getData('rbac.status');
+			}
+			function switcher_detail(item) {
+				return paramRender(item, defGrid.options.param_detail, item.detail);
+			}
+			var getdetail = new function () {
+				return getData('yesOrNo');
+			}
+			function toQuery(item, page, pageSize) {
+				if (!page)
+					page = defGrid.options.page;
+				if (!pageSize)
+					pageSize = defGrid.options.pageSize;
+				
+				var param = new Object();
+				param.name = $("#name").val();
+				//param.code = $("#dictCode").val();
+				param.status = $("#dictStatus").val();
+
+				var data = JSON.stringify(reqObj('q','rbac.select.dict.def.queryMenu',JSON.stringify(param),'l',true,page,pageSize));
+				ajaxSubmit("/cm/rbac/cm.do?m=q", data, function(data) {
+					 //wws 2014-2-23 增加分页信息 start 
+					var d = data['data'].Rows;
+					var ps = defGrid.options.pageSize, p = defGrid.options.page, t = parseInt(data['data'].Total);
+					if (t > ps) {
+						for (var i = 0; i < (p - 1) * ps; i++) {
+							d.unshift(null);
+						}
+					}
+					defGrid.data = data['data'];
+					 //wws 2014-2-23 增加分页信息  end 
+					defGrid.set({data: data['data']});
+				});
+			}
+			 
+			var addDialog;
+			function openDictDef() {
+				toReset('#new_dict_def input,select,textarea');
+				addDialog = $.ligerDialog.open({
+					target:$("#new_dict_def"),
+					title:"新增菜单",
+					width:650,
+					height:450
+				});
+			}
+			function toAdd() {
+				var param = new Object();
+				param.code=$("#newCode").val();
+				param.name = $("#newName").val();
+				param.higher_id=$("#newHIGHER_ID").val();
+				param.seq=$("#newSEQ").val();
+				param.resource_id=$("#newRESOURCE_ID").val();
+				param.icon_uri=$("#newICON_URI").val();
+				param.hint=$("#newHint").val();
+				param.path=$("#newPath").val();
+				param.layer=$("#newLayer").val();
+				param.detail=$("#newDetail").val();
+				param.status = $("#newStatus").val();
+				param.desc=$("#newDesc").val();
+				var data = JSON.stringify(reqObj('a','rbac.add.dict.def.addMenu',JSON.stringify(param)));
+				//alert(data);
+				ajaxSubmit("/cm/rbac/cm.do?m=a", data, function(data) {
+					if (data) {
+						//alert(parseInt(data['status']));
+						if (parseInt(data['status']) > 0) {
+							$.ligerDialog.success('保存成功', '操作完成', function() {
+							addDialog.hide();
+							toQuery();
+						});
+						} else {
+							$.ligerDialog.error('保存失败');
+						}
+					}
+				});
+			}
+			function toModify(row) {
+				
+				 var param = JSON.stringify(reqObj('u','rbac.update.dict.def.updateMenu',row));
+					//alert(param);
+					ajaxSubmit("/cm/rbac/cm.do?m=u", param, function(data) {
+						if (data) {
+							if (parseInt(data['status']) > 0) {
+								$.ligerDialog.success('保存成功');
+							} else {
+								$.ligerDialog.error('保存失败');
+							}
+						}
+					});
+			}
+			function toDel(row) {
+				 var param = JSON.stringify(reqObj('d','rbac.delete.dict.def.deleMenu',row));
+					ajaxSubmit("/cm/rbac/cm.do?m=d", param, function(data) {
+						if (data) {
+							if (parseInt(data['status']) > 0) {
+								$.ligerDialog.success('删除成功');
+							} else {
+								$.ligerDialog.error('删除失败');
+							}
+						}
+					});
+			}
+                
+			
+	    </script>
+		<style type="text/css">
+			label{margin: 5px 20px 5px 15px;}
+			.fields{height:35px;padding-top:5px;}
+			.dict-info{width: 260px;padding: 10px;}
+			.diff {margin:3px 0;}
+			.lineD {width:99%;float:left;position:relative;overflow:hidden;margin:10px 0 2px 2px}
+			.labelD {width:26%;position:relative;float:left;padding-top:3px;}
+			.dplD {width:73%;position:relative;float:left;}
+			.title{font-size:14px;font-weight:bold;background-position:left;padding-left:18px;}
+		</style>
+	</head>
+	<body style="padding:0;">
+		<div id="pageloading"></div>  
+		<div id="layout_main">
+			<div position="center" id="a_center" title="菜单列表">
+				<div id="query_cond" class="fields">
+					<label>名称</label><input type="text" class="s-text txt-def" id="name" />
+					<label>状态</label><select id="dictStatus" param="rbac.status" first=""></select>
+					<input type="button" value="查询" style="margin-left:25px;" onclick="toQuery();" />
+					<input type="button" value="清空" onclick="toReset('#query_cond input,select,textarea');" />
+				</div>
+				<div id="query_list"></div>
+			</div>
+		</div>
+		<div id="new_dict_def" style="display:none;overflow:hidden;">
+			<div class="line-div" style="margin-bottom:10px;">
+				<span class="title l-icon-add">添加菜单</span>
+			</div>
+			<div class="line-div">
+				<div class="label-div"><label>编号</label></div>
+				<div class="in-div"><input type="text" class="s-text txt-def" id="newCode" /></div>
+			 
+				<div class="label-div"><label>名称</label></div>
+				<div class="in-div"><input type="text" class="s-text txt-def" id="newName" /></div>
+			</div>
+			 <div class="line-div">
+				<div class="label-div"><label>上级菜单</br>编号</label></div>
+				<div class="in-div"><input type="text" class="s-text txt-def" id="newHIGHER_ID" /></div>
+			 
+				<div class="label-div"><label>显示顺序</label></div>
+				<div class="in-div"><input type="text" class="s-text txt-def" id="newSEQ" /></div>
+			</div>
+			<div class="line-div">
+				<div class="label-div"><label>资源编号</label></div>
+				<div class="in-div"><input type="text" class="s-text txt-def" id="newRESOURCE_ID" /></div>
+			 
+				<div class="label-div"><label>图标</label></div>
+				<div class="in-div"><input type="text" class="s-text txt-def" id="newICON_URI" /></div>
+			</div>
+			<div class="line-div">
+				<div class="label-div"><label>提示信息</label></div>
+				<div class="in-div"><input type="text" class="s-text txt-def" id="newHint" /></div>
+		 
+				<div class="label-div"><label>分级码</label></div>
+				<div class="in-div"><input type="text" class="s-text txt-def" id="newPath" /></div>
+			</div>
+			<div class="line-div">
+				<div class="label-div"><label>级数</label></div>
+				<div class="in-div"><input type="text" class="s-text txt-def" id="newLayer" /></div>
+			 
+				<div class="label-div"><label>明细否</label></div>
+				<div class="in-div">
+				<select class="txt-def" id="newDetail" param="yesOrNo" default="1" style="margin-right: 30px;"></select>
+				</div>
+			</div>
+			<div class="line-div">
+				<div class="label-div"><label>状态</label></div>
+				<div class="in-div"><select class="txt-def" id="newStatus" param="rbac.status" default="1" style="margin-right: 30px;"></select></div>
+		 	</div>
+			<div class="line-div">
+				<div class="label-div"><label>说明</label></div>
+				<div class="in-div"><textarea cols="24" rows="2" id="newDesc"></textarea></div>
+			</div>
+			<div class="line-div" style="margin-top:50px;padding-left:40%;">
+				<input type="button" value="保存" onclick="toAdd();" />
+				<input type="button" value="清空" onclick="toReset('#new_dict_def input,select,textarea')" />
+			</div>
+		</div>
+		
+	</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<title>打印入库单</title>
+		
+		<link rel="stylesheet" type="text/css" href="../css/cm-default.css"  />
+		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/Aqua/css/ligerui-all.css" />
+		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/ligerui-icons.css" />
+		<script src="../js/jquery.js" type="text/javascript"></script>
+		<script src="../ligerUI/js/ligerui.all.js" type="text/javascript"></script>
+		<script src="../js/common.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			$(function(){
+				$("#d-menu").ligerToolBar({items:[
+				    {text:'打印',click:function(){window.print()},icon:'print'},
+					{line:true}
+				]});
+				toQuery();
+				$("#pageloading").hide();
+			});
+			function toQuery() {
+				var codeQ = window.location.toString().replace(/^[^?]+\?id=/, '');
+				
+				var data = JSON.stringify(reqObj('q','stock.select.picking_product.query',JSON.stringify({code:codeQ})));
+				ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
+					var picking = data.data.Rows[0];
+					if (picking.recpt_in_date === undefined) {
+						$.ligerDialog.error('入库单[' + codeQ + ']尚未完成入库操作，无法进行打印。','无法打印',function(){
+							parent.printWin.close();
+						});
+						return;
+					}
+					
+					$("#partnerS").text(picking.partner_id);
+					$("#moveInDateS").text(picking.recpt_in_date);
+					$("#codeS").text(picking.code);
+					$("#originS").text(picking.origin);
+					$("#warehoseS").text(picking.warehose_id);
+				});
+			}
+	    </script>
+		<style type="text/css" media="print">
+			.no-print{display:none;}
+		</style>
+		<style type="text/css">
+			.print-content{text-align:center;padding:5px;}
+			h1{margin-top:10px;font-family:"宋体",Arial,sans-serif;font-weight:900;}
+			table.content{width:100%;}
+			table.content td{text-align:center;}
+			table.no-border{width:85%;}
+			.no-border tr{height:50px;}
+			.no-border th{font-family:"宋体",Arial,sans-serif;font-size:1.2em;font-weight:800;vertical-align:bottom;padding-left:10px;}
+			.no-border td{border-bottom:1px solid #000000;}
+			.no-border span{text-decoration:underline;font-size:1.0em;font-weight:normal;}
+		</style>
+	</head>
+	<body style="padding:0;">
+		<div id="pageloading"></div>  
+		<div id="d-menu" class="no-print"></div>
+		<div id="d-content" class="print-content">
+			<table class="content">
+				<thead>
+					<tr style="height:60px;">
+						<td><h1>成品入库单</h1></td>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td style="padding-left:7.5%;">
+							<table class="no-border">
+								<tr>
+									<th style="width:40%;">供应商：<span id="partnerS"></span></th>
+									<th style="width:27%;">入库日期：<span id="moveInDateS"></span></th>
+									<th style="width:33%;">NO：<span id="codeS"></span></th>
+								</tr>
+								<tr>
+									<th>采购申请单：<span id="originS"></span></th>
+									<th colspan="3">入库仓库：<span id="warehoseS"></span></th>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					<tr>
+						<td></td>
+					</tr>
+					
+				</tbody>
+			</table>
+		</div>
+	</body>
+</html>
