@@ -15,14 +15,16 @@
 			var defGrid;
 			var opt;
 			//去传输过来的信息
-			var str = window.location.toString().replace(/^[^?]+\??/, "");
+// 			var str = window.location.toString().replace(/^[^?]+\??/, "");
 			
-			var ss = str.split('?');
-			var query = new Object();
-			for (var i = 0; i < ss.length; i++) {
-				eval('query.'.concat(ss[i].split('=')[0]).concat('="').concat(ss[i].split('=')[1]).concat('"'));
-			}
-			opt = query['m'];
+// 			var ss = str.split('?');
+// 			var query = new Object();
+// 			for (var i = 0; i < ss.length; i++) {
+// 				eval('query.'.concat(ss[i].split('=')[0]).concat('="').concat(ss[i].split('=')[1]).concat('"'));
+// 			}
+// 			opt = query['m'];
+		    var query = getQueryString(window.location.toString());
+				opt = query.m;
 			$(function(){
                	defGrid = $("#query_list").ligerGrid({
                     columns:[

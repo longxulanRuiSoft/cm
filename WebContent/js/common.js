@@ -316,7 +316,7 @@ function appendDeleteBtn(action, title) {
  * @returns {Object} 将query string中的参数封装为对象
  */
 function getQueryString(url) {
-	var qs = uri.replace(/^[^?]+\??/, '');
+	var qs = url.replace(/^[^?]+\??/, '');
 	var queryObj = new Object();
 	if (qs.length === 0)
 		return queryObj;
