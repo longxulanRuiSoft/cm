@@ -1,0 +1,311 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<title>发货单</title>
+		
+		<link rel="stylesheet" type="text/css" href="../css/cm-default.css"  />
+		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/Aqua/css/ligerui-all.css" />
+		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/ligerui-icons.css" />
+		<script src="../js/jquery.js" type="text/javascript"></script>
+		<script src="../ligerUI/js/ligerui.all.js" type="text/javascript"></script>
+		<script src="../js/common.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			var pGrid, c_row, opt, c_code;
+			var udata;
+			$(function(){
+				udata = getData('user',{orgid:$("#deptCodeS").val()},false)
+				$("#layout_main").ligerLayout({
+					bottomHeight: "46%",
+					allowBottomResize:false
+                });
+				$("form").ligerForm();
+				$(".l-textarea").each(function(index){
+					$(this).removeClass("l-textarea");
+				});
+				$("#d-menu").ligerToolBar({items:[
+				    {text:'保存',click:toAdd,icon:'save'},
+				    {line:true},
+				    {text:'退回',icon:'save'},
+				    {line:true},
+				    {text:'确认发货',id:'quality',click:Quality,icon:'clear'},
+					{line:true}
+				]});
+               	pGrid = $("#p-div").ligerGrid({
+                    columns:[
+						{display:'商品编号',name:'code',width:90,editor:{type:'popup',onButtonClick:selectProduct},textField:'code',valueField:'categ_id'},
+	                    {display:'品名',name:'name',width:150},
+			            {display:'规格/型号',name:'specs',width:150,render:function(item){return paramRender(item,'product_specs',item.code);}},
+			            {display:'单位',name:'product_uom',width:90,render:function(item){return paramRender(item,'uom',item.product_uom);},editor:{type:'select',data:getData('uom'),valueField:'value',textField:'name'}},
+			            {display:'品牌',name:'brand',width:60,render:function(item){return paramRender(item,'brand',item.brand);}
+			            ,editor:{type:'select',data:getData('Brand'),valueField:'value',textField:'name'}
+			            },
+			            //{display:'采购数量',name:'tar_product_qty',width:90,align:'right',editor:{type:'int'},render:function(item){return parseFloat(item.tar_product_qty).toFixed(0);}},
+			            {display:'数量',name:'product_qty',width:90,id:'num',align:'right',editor:{type:'int'},render:function(item){return parseFloat(item.product_qty).toFixed(0);}},
+			           
+                    ],
+                    pageSize:20,
+                    usePager: true,
+                    width:'100%',
+                    height:'100%',
+                    dataAction:'server',
+                    checkbox:false,
+                    rownumbers:false,
+                    fixedCellHeight:false,
+                    colDraggable:false,
+                    enabledEdit:true,
+                    clickToEdit:false,
+                    onSelectRow:function(rowdata, rowindex){$("#txtrowindex").val(rowindex);},
+                    onReload: queryProd
+				});
+				//appendAddBtn(function(){
+				//	pGrid.addEditRow();
+				//	c_row = pGrid.getRow(pGrid.rows.length - 1);
+				//}, "添加商品明细");
+				//appendModifyBtn(function(){}, "修改商品明细");
+				//appendDeleteBtn(function(){}, "删除商品明细");
+
+				var str = window.location.toString().replace(/^[^?]+\??/, "");
+				if (str) {
+					var ss = str.split('&');
+					var query = new Object();
+					for (var i = 0; i < ss.length; i++) {
+						eval('query.'.concat(ss[i].split('=')[0]).concat('="').concat(ss[i].split('=')[1]).concat('"'));
+					}
+					opt = query['o'];
+					c_code = query['code'];
+    
+					if (opt === 'm') {
+						var param = {code:c_code};
+						var data = JSON.stringify(reqObj('q','stock.select.picking.query',JSON.stringify(param)));
+						ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
+							bindVal(data['data']);
+						}, null, false);
+						
+						param = {picking_id:c_code};
+						data = JSON.stringify(reqObj('q','stock.select.move.query',JSON.stringify(param)));
+						ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
+							pGrid.set({data: data['data']});
+						}, null, false);
+
+						ajaxSubmit("/cm/rbac/cmUser.do?method=getUserInfo", null, function(data) {
+							$('#WriteUserCodeS').val(data['uid']);
+							$("#WriteDateS").val(data['date']);
+						}, null, false);
+					}
+				} else {
+					ajaxSubmit("/cm/rbac/cmUser.do?method=getUserInfo", null, function(data) {
+						$('#deptS').val(data['oname']);
+						$('#deptCodeS').val(data['oid']);
+						$('#createUserS').val(data['uname']);
+						$('#createUserCodeS').val(data['uid']);
+						$("#createDateS").val(data['date']);
+						$('#WriteUserCodeS').val(data['uid']);
+						$("#WriteDateS").val(data['date']);
+					
+					}, null, false);
+				}
+				$("#moveInS").ligerComboBox({
+					autocomplete: true,
+                    valueField:'value',
+                    textField:'name',
+                    data:udata,
+                    onSelected:function(v,t) {
+                        $("#moveInIdS").val(v);
+                    }
+				});
+				$("#pageloading").hide();
+			});
+			function resetArea() {
+				toReset('#a_center input:not(.readonly),select,textarea');
+			}
+			var curRow, selDialog;
+			function selectProduct() {
+				curRow = this;
+				selDialog = $.ligerDialog.open({height:600,width:800,isResize: true,url:'../sysmgt/product_query.html?o=s',title:'选择商品'});
+			}
+			function bindVal(data) {
+				if (data.Rows && data.Rows.length === 1) {
+					data = data.Rows[0];
+					$('#idS').val(data.id);
+					$('#stateS').val(data.state);
+					$('#codeS').val(data.code);
+					$('#originS').val(data.origin);
+					$('#partnerInS').val(paramRender(null,'partner_list',data.partner_id));
+					$('#partnerS').val(data.partner_id);
+					$('#predDateS').val(data.pred_date);
+					$('#warehouseInS').val(paramRender(null,'base_point',data.warehose_id));
+					$('#warehouseS').val(data.warehose_id);
+					$('#moveInS').val(paramRender(null,'user',data.move_in_user));
+					$('#moveInIdS').val(data.move_in_user);
+					$('#noteS').val(data.note);
+					$('#deptS').val(paramRender(null,'org_list',data.dept_id));
+					$('#deptCodeS').val(data.dept_id);
+					$('#createUserS').val(paramRender(null,'user',data.createuser));
+					$('#createUserCodeS').val(data.createuser);
+					$('#createDateS').val(data.createdate);
+				}
+			}
+			function queryProd() {}
+			function toAdd() {
+				if (pGrid.rows.length === 0) {
+					$.ligerDialog.error('请添加入库商品。','错误');
+					return;
+				}
+				
+				//pGrid.endEdit(c_row.rowindex);
+				if (opt === 'm') {
+					//编辑方式
+					var param = new Object();
+					//入库编号
+					param.code=$('#codeS').val();
+					//采购编号
+					param.origin=$('#originS').val();
+					//供应商
+					param.partner_id=$('#partnerS').val();
+					//预计到货日期
+					param.pred_date=$('#predDateS').val();
+					//入库仓库
+					param.warehose_id=$('#warehouseS').val();
+					//moveInS
+					//$('#moveInS').val();
+					param.move_in_user=$('#moveInIdS').val();
+					//备注
+					param.note=$('#noteS').val();
+					//修改人
+					param.writeusercode=$('#WriteUserCodeS').val();
+					//修改日期
+					param.writedate=$('#WriteDateS').val();
+
+					 var param = JSON.stringify(reqObj('u','stock.update.stockpicking.update',JSON.stringify(param)));
+						//alert(param);
+						ajaxSubmit("/cm/rbac/cm.do?m=u", param, function(data) {
+							if (data) {
+								if (parseInt(data['status']) > 0) {
+									$.ligerDialog.success('保存成功');
+								} else {
+									$.ligerDialog.error('保存失败');
+								}
+							}
+						});
+				} 
+				
+			}
+			function Quality() {
+				if($('#stateS').val()=='30')
+					$.ligerDialog.error('已提交发货，不能重复发货，请确认！');
+				else
+					
+				   if(window.confirm('您确定要提交该项数据吗？')==true)
+			         
+				//	var row = defGrid.getRow(rowid);
+					//$('#id').val(row.id);
+					//$('#state').val(32);
+					var param1=new Object();
+					param1.id=$('#idS').val();
+					param1.state='30';
+					
+					 var param = JSON.stringify(reqObj('u','stock.update.picking_state.update',JSON.stringify(param1)));
+					
+						ajaxSubmit("/cm/rbac/cm.do?m=u", param, function(data) {
+							if (data) {
+								if (parseInt(data['status']) > 0) {
+									$('#stateS').val(30);
+									$.ligerDialog.success('提交成功');
+									//$("#quality").hide();
+									//toQuery();
+								} else {
+									$.ligerDialog.error('提交失败');
+								}
+							}
+						});
+		        }
+	        function beginEdit(rowid) { 
+	        	pGrid.beginEdit(rowid);
+	        }
+	        function cancelEdit(rowid) { 
+	        	pGrid.cancelEdit(rowid);
+	        }
+	        function deleteRow(rowid) {
+	            $.ligerDialog.confirm('您确定要删除该项数据吗？', function(r) {
+		            if (!r)
+			            return;
+	                var row = pGrid.getRow(rowid);
+	                if (row['__status'] !== 'add')
+	                	toDel(JSON.stringify(row));
+	                pGrid.deleteRow(rowid);
+	            })
+	        }
+			function calcTotal(item) {
+				if (item.product_qty && item.price_unit) {
+					return (parseFloat(item.product_qty) * parseFloat(item.price_unit)).toFixed(2);
+				}
+				return '0.00';
+			}
+	    </script>
+		<style type="text/css">
+			.center-height{height: 100%;}
+		</style>
+	</head>
+	<body style="padding:0;">
+	<input  type="hidden" id="idS"/>
+	<input  type="hidden" id="stateS"/>
+		<div id="pageloading"></div>  
+		<div id="layout_main">
+			<div position="center" id="a_center" title="基本信息" style="overflow:auto;">
+				<div id="d-menu" class="toolbar"></div>
+				<div style="height:25px;"></div>
+				<form name="basic-form" method="post" id="basic_form">
+					<div class="line-div">
+						<div class="label-div"><label>出库单号</label></div>
+						<div class="in-div"><input type="text" id="codeS" ltype="text" class="readonly diff" readonly="readonly" value="由系统自动生成" /></div>
+						<div class="label-div"><label>销售任务单号</label></div>
+						<div class="in-div"><input type="text" id="originS" ltype="text" class="diff"  readonly="readonly"/></div>
+					</div>
+                	<div class="line-div">
+						<div class="label-div"><label>客户</label></div>
+						<div class="in-div">
+						<input type="text" id="partnerInS" ltype="text" class="diff" readonly="readonly"/>
+						<input type="hidden" id="partnerS" />
+						</div>
+						<div class="label-div"> <label>预计出货日期</label></div>
+						<div class="in-div"><input type="text" id="predDateS" ltype="text" class="diff" readonly="readonly" /></div>
+					</div>
+                	<div class="line-div">
+						<div class="label-div"><label>出库仓库</label></div>
+						<div class="in-div">
+							<input type="text" id="warehouseInS" ltype="text" class="diff" readonly="readonly"  />
+						<input type="hidden" id="warehouseS" />
+						</div>
+						<div class="label-div"><label>发货人</label></div>
+						<div class="in-div"><input type="text" id="moveInS" ltype="combobox" class="diff" /></div>
+						<input type="hidden" id="moveInIdS" />
+					</div>
+					<div class="line-div" style="height:76px;">
+						<div class="label-div"><label>备注</label></div>
+						<div class="in-div" style="width:72%;">
+							<textarea cols="73" rows="3" id="noteS" readonly="readonly"></textarea>
+						</div>
+					</div>
+					<div class="line-div">
+						<div class="label-div"><label>制单部门</label></div>
+						<div class="in-div"><input type="text" id="deptS" ltype="text" class="readonly diff" readonly="readonly" /></div>
+						<input type="hidden" id="deptCodeS" />
+						<div class="label-div"><label>出库人</label></div>
+						<div class="in-div"><input type="text" id="createUserS" ltype="text" class="readonly diff" readonly="readonly" /></div>
+						<input type="hidden" id="createUserCodeS" />
+							<input type="hidden" id="WriteUserCodeS" />
+								<input type="hidden" id="WriteDateS" />
+					</div>
+					<div class="line-div">
+						<div class="label-div"><label>制单日期</label></div>
+						<div class="in-div"><input type="text" id="createDateS" ltype="text" class="readonly diff" readonly="readonly" /></div>
+					</div>
+			    </form>
+			</div>
+			<div position="bottom" id="a_right" title="商品列表">
+				<div id="p-div"></div>
+			</div>
+		</div>
+	</body>
+</html>

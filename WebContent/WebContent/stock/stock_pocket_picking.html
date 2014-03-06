@@ -1,0 +1,299 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<title>生产领用单</title>
+		
+		<link rel="stylesheet" type="text/css" href="../css/cm-default.css"  />
+		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/Aqua/css/ligerui-all.css" />
+		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/ligerui-icons.css" />
+		<script src="../js/jquery.js" type="text/javascript"></script>
+		<script src="../ligerUI/js/ligerui.all.js" type="text/javascript"></script>
+		<script src="../js/common.js" type="text/javascript"></script>
+		<script src="../js/json2.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			var defGrid;
+			$(function(){
+               	defGrid = $("#query_list").ligerGrid({
+                    columns:[
+ 						{display:'操作',isSort:false,width:130,render:function(rowdata,rowindex,value) {
+ 							 
+ 							var h = ""; 
+							var row = defGrid.getRow(rowindex);
+							// 单据状态 state      00 新建  10 未审核 20 已审核 30 未提交 40已提交  50 已驳回
+							// 流程状态 flow_state 00 新建（制单） 10 入库质检     20 入、出库审核   30 打印出入库单   40 入、出库确认    50 入、出库完成
+							  if(row.state  >= '20' && row.flow_state >='00') 
+							  	{
+								  h += "已审核  ";
+							  	}
+								///alert(row.flow_state+row.state);
+								//if(row.state<='20'){ alert(1);}
+							  if( row.state < '20' && row.flow_state =='00'   )
+							 	{
+								  
+							  		h += "<a href='javascript:void(0);' id='toConfirm' class='opt-link' onclick='toConfirm(" + rowindex + ")'>审核</a> ";
+								}
+							
+	 						if(row.state <= '20' && row.flow_state =='00')
+ 	 							 {
+                               		h += "<a href='javascript:void(0);' id='submitToPick' class='opt-link' onclick='submitToPick(" + rowindex + ")'>提交发货</a> ";
+								 }
+	 						if(row.state  >= '40' && row.flow_state >='20') 
+		 						{
+	 								h += "已提交发货  ";
+		 						}
+	 						//
+	 						if(row.state  == '50') 
+	 						{
+ 								h = "<a href='javascript:void(0);' id='toReceive' class='opt-link' onclick='toReceive(" + rowindex + ")'>接收驳回待办</a> ";
+	 						}	
+							
+                           	return h; 
+ 						},frozen:true
+ 						},
+                        {display:'单据状态',name:'state',width:70,minWidth:60,render:function(item){return paramRender(item,'stockBillSate',item.state);}},
+                        //{display:'单据类型',name:'move_type',width:90,minWidth:60,render:function(item){return paramRender(item,'stockBillType',item.move_type);}},
+                        {display:'修改时间',name:'writedate',width:130},
+  	                    {display:'出库单号',name:'code',width:130,minWidth:60},
+	                    {display:'生产任务单号',name:'origin',width:130},
+			            {display:'出库日期',name:'pred_date',width:80},
+			            {display:'出库仓库',name:'warehose_id',render:sw_warehose,width:90},
+			            {display:'出货人',name:'move_in_user',width:90,render:sw_opt},
+			           // {display:'制单时间',name:'createdate',width:100},
+			            {display:'备注',width:210,name:'note',align:'left'}
+                    ],
+                    pageSize:20,
+                    usePager: true,
+                    dataAction:'server', 
+                    url: '../common/q.jsp', 
+                    width:'100%',
+                    height:'99%',
+                    dataAction:'server',
+                    checkbox:false,
+                    rownumbers:false,
+                    fixedCellHeight:false,
+                    colDraggable:true,
+                    enabledEdit:true,
+                    clickToEdit:false,
+                    onSelectRow:function(rowdata, rowindex){$("#txtrowindex").val(rowindex);},
+                    onReload: toQuery,
+                    param_movein:'user',
+                    param_warehose:'base_point'
+				});
+				appendAddBtn(openDictDef, "添加生产领用单");
+				appendModifyBtn(openModify, "编辑生产领用单");
+				appendDeleteBtn(deleteRow, "删除生产领用单");
+				$("#pageloading").hide();
+				//默认查询全部数据 
+				toQuery();
+				
+				ajaxSubmit("/cm/rbac/cmUser.do?method=getUserInfo", null, function(data) {
+					$('#createUserCodeS').val(data['uid']);
+				}, null, false);
+			});
+			function sw_opt(item) {
+				var swd = paramRender(item, defGrid.options.param_movein, item.move_in_user);
+				if (!swd)
+					swd = item.move_in_user;
+				return swd;
+			}
+			function toQuery(item, page, pageSize) {
+				if (!page)
+					page = defGrid.options.page;
+				if (!pageSize)
+					pageSize = defGrid.options.pageSize;
+				
+				var param = new Object();
+				param.code = $("#codeQ").val();
+				param.origin = $("#originQ").val();
+				param.state=$("#stateQ").val();
+                param.move_type='03';
+                param.createuser=$('#createUserCodeS').val();
+				var data = JSON.stringify(reqObj('q','stock.select.picking_pocket.query',JSON.stringify(param),'l',true,page,pageSize));
+				ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
+					defGrid.set({data: data['data']});
+				});
+			}
+			function sw_warehose(item) {
+				var swd = paramRender(item, defGrid.options.param_warehose, item.warehose_id);
+				if (!swd)
+					swd = item.warehose_id;
+				return swd;
+			}
+			function openModify() {
+				
+				var row = defGrid.getSelectedRow();
+				if (!row) {
+					$.ligerDialog.error('请先选择生产领用单记录。','错误');
+					return;
+				}
+				var con=Contrast(row);
+				if(con =='false' )
+				{
+					$.ligerDialog.error('已审核或已提交的单据不允许编辑！');
+					return;
+				}
+				
+				parent.f_addTab('modify_pocket','生产领用单维护','./stock/new_stock_pocket_picking.html?o=m&code='.concat(row.code));
+			}
+			function openDictDef() {
+				parent.f_addTab('new_pocket','新增生产领用单','./stock/new_stock_pocket_picking.html');
+			}
+			function toModify(row) {
+				var url = "/cm/rbac/cmDict.do?m=u";
+				ajaxSubmit(url, row, function(data) {
+					if (data) {
+						if (parseInt(data['result']) > 0) {
+							$.ligerDialog.success('保存成功');
+						} else {
+							$.ligerDialog.error('保存失败');
+						}
+					}
+				});
+			}
+			var printWin;
+			function toPrint(rowid) {
+				printWin = $.ligerDialog.open({height:600,width:800,url:'./print_stock_pocket_picking.html?id='.concat(defGrid.getRow(rowid).code),title:'打印入库单'});
+			}
+
+			/* 
+				单据流程流程
+			           单据状态 state      00 新建  10 未审核 20 已审核 30 未提交 40已提交  50 已驳回
+				流程状态 flow_state 00 新建（制单） 10 入库质检     20 入、出库审核   30 打印出入库单   40 入、出库确认    50 入、出库完成
+			*/
+			// 接收驳回
+			function toReceive(rowid)
+			{
+				var row = defGrid.getRow(rowid);
+				var param1=new Object();
+				param1.id=row.id;
+				// 驳回后状态被修改
+				param1.state='10';
+				param1.flow_state='00';
+				upPickingDel(param1,'stock.update.picking_state.update','接收成功','接收失败');
+		
+			}
+			// 审核确认
+			function toConfirm(rowid) {
+				var row = defGrid.getRow(rowid);
+				var param1=new Object();
+			     	param1.id=row.id;
+					//已审核 20
+					param1.state="20";
+                    param1.flow_state=row.flow_state;
+                    
+					upPickingDel(param1,'审核成功','审核失败');
+			
+		        }
+			
+			//提交出库
+			function submitToPick(rowid) {
+				var row = defGrid.getRow(rowid);
+				var param1=new Object();
+				param1.id=row.id;
+				// 状态被修改
+				param1.state='40';
+				param1.flow_state='30';
+				upPickingDel(param1,'提交出库成功','提交出库失败');
+
+				
+			}
+			
+			function upPickingDel(param1,successInfo,errorInfo){
+				
+				 var param = JSON.stringify(reqObj('u','stock.update.picking_state.update',JSON.stringify(param1)));
+					
+					ajaxSubmit("/cm/rbac/cm.do?m=u", param, function(data) {
+						if (data) {
+							if (parseInt(data['status']) > 0) {	
+								
+								$.ligerDialog.success(successInfo);
+								//自动刷新
+								toQuery();
+							} else {								
+								$.ligerDialog.error(errorInfo);
+							}
+						}
+					});
+				
+				
+			}
+
+			/*	删除处理 
+			*/
+			 function deleteRow(rowid) {
+				 
+				 var row = defGrid.getSelectedRow();
+				 
+				 if(row.state >= '20')
+					{
+					 $.ligerDialog.error('该单据已审核或已提交，不能删除！');
+						return;
+					}
+				  
+		            $.ligerDialog.confirm('您确定要删除该项数据吗？', function(r) {
+			            if (!r)
+				            return;
+		                
+		                if (row['__status'] !== 'add')
+		                	toDel(JSON.stringify(row));
+		                defGrid.deleteRow(rowid);
+		            })
+		        }
+			// 删除处理业务处理
+			 function toDel(row) {
+				
+				 var param = JSON.stringify(reqObj('d','stock.delete.stock_move.prckingid',row));
+					ajaxSubmit("/cm/rbac/cm.do?m=d", param, function(data) {
+						if (data) {
+							if (parseInt(data['status']) > 0) {
+								
+						     var param = JSON.stringify(reqObj('d','stock.delete.stock_picking.code',row));
+						      ajaxSubmit("/cm/rbac/cm.do?m=d", param, function(data) {
+								if (parseInt(data['status']) > 0) {
+									toQuery();
+								  $.ligerDialog.success('删除成功');
+								}
+								else{
+										$.ligerDialog.error('删除失败');
+									}
+									});
+							} else {
+								$.ligerDialog.error('删除失败');
+							}
+						}
+					});
+			}
+			
+	    </script>
+		<style type="text/css">
+			label{margin: 5px 20px 5px 15px;}
+			.fields{height:35px;padding-top:5px;}
+			.dict-info{width: 260px;padding: 10px;}
+			.diff {margin:3px 0;}
+			.lineD {width:99%;float:left;position:relative;overflow:hidden;margin:10px 0 2px 2px}
+			.labelD {width:13%;position:relative;float:left;padding-top:3px;}
+			.dplD {width:36%;position:relative;float:left;}
+			.title{font-size:14px;font-weight:bold;background-position:left;padding-left:18px;}
+			.l-dialog-content-nopadding{padding:0 !important;}
+		</style>
+	</head>
+	<body style="padding:0;">
+		<div id="pageloading"></div>  
+		<input type="hidden" id="createUserCodeS" />
+		<div id="layout_main">
+			<div position="center" id="a_center" title="生产领用单列表">
+				<div id="query_cond" class="fields">
+					<label>出库单号</label><input type="text" class="s-text-qCond txt-def" id="codeQ" />
+					<label>生产任务单号</label><input type="text" class="s-text-qCond txt-def" id="originQ" />
+					<!-- <label>供应商</label><input type="text" class="s-text txt-def" id="partnerQ" />
+					 -->
+					 <label>单据状态</label><select id="stateQ" param="Deliver" first="" ></select>
+					<input type="button" value="查询" style="margin-left:25px;" onclick="toQuery();" />
+					<input type="button" value="清空" onclick="toReset('#codeQ,#originQ,#partnerQ');" />
+				</div>
+				<div id="query_list"></div>
+			</div>
+		</div>
+	</body>
+</html>

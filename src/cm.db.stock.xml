@@ -24,10 +24,33 @@
 								<entry key="origin" value=":like(lr)" />
 								<entry key="partner_id" value=":like(lr)" />
 								<entry key="state" value="" />
+								<entry key="type" value="" />
 								<entry key="move_type" value="" />
 								<entry key="createuser" value="" />
 								<entry key="move_in_user" value="" />
 								<entry key="flow_state" value=":&gt;" />
+							</map>
+						</property>
+					</bean>
+				</entry>
+				<entry key="picking_sale.query">
+					<bean class="com.ruisoft.cm.rbac.entity.QueryEntity">
+						<property name="dmlType" value="cond" />
+						<property name="sql">
+							<value>
+<![CDATA[SELECT ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Partner_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser,Flow_State FROM Stock_Picking]]>
+							</value>
+						</property>
+						<property name="conditions">
+							<map>
+								<entry key="code" value=":like(lr)" />
+								<entry key="origin" value=":like(lr)" />
+								<entry key="partner_id" value=":like(lr)" />
+								<entry key="state" value="" />
+								<entry key="move_type" value="" />
+								<entry key="createuser" value="" />
+								<entry key="move_in_user" value="" />
+								<entry key="flow_state" value=":&gt;=" />
 							</map>
 						</property>
 					</bean>
@@ -103,7 +126,15 @@
 						<property name="dmlType" value="cond" />
 						<property name="sql">
 							<value>
-<![CDATA[SELECT ID,COMPANY_ID,DEPT_ID,BUSIORG_ID,TYPE,CATEG_ID,CODE,NAME,SHORT_NAME,HELP_TAG,BAR_CODE,SPECS,BRAND,WARRANTY,UOM_ID,UOM_PRECISION,EACH_WEIGHT,WEIGHT_UNIT_ID,EACH_VOLUME,VOLUME_UNIT_ID,SUPPLY_METHOD,PURCHASE_OK,SALE_OK,SALE_DELAY,DESC_PURCHASE,PRODUCE_DELAY,PRODUCT_MANAGER,PROCURE_METHOD,COST_METHOD,DESC_SALE,LOC_RACK,LOC_ROW,STATE,NOTE,CREATECOMPANY_ID,CREATEDATE,CREATEUSER,WRITEDATE,WRITEUSER FROM PRODUCT_PRODUCT]]>
+<![CDATA[SELECT Product_Actual_Qty,Product_Enable_Qty,Product_Occupy_Qty,product_product.ID,product_product.COMPANY_ID,product_product.DEPT_ID,product_product.BUSIORG_ID,product_product.TYPE,product_product.CATEG_ID,product_product.CODE,product_product.NAME,product_product.SHORT_NAME,product_product.HELP_TAG,product_product.BAR_CODE,product_product.SPECS,product_product.BRAND,product_product.WARRANTY,product_product.UOM_ID,product_product.UOM_PRECISION,product_product.EACH_WEIGHT,product_product.WEIGHT_UNIT_ID,product_product.EACH_VOLUME,product_product.VOLUME_UNIT_ID,product_product.SUPPLY_METHOD,product_product.PURCHASE_OK,product_product.SALE_OK,product_product.SALE_DELAY,product_product.DESC_PURCHASE,product_product.PRODUCE_DELAY,product_product.PRODUCT_MANAGER,product_product.PROCURE_METHOD,product_product.COST_METHOD,product_product.DESC_SALE,product_product.LOC_RACK,product_product.LOC_ROW,product_product.STATE,product_product.NOTE,product_product.CREATECOMPANY_ID,product_product.CREATEDATE,product_product.CREATEUSER,product_product.WRITEDATE,product_product.WRITEUSER
+FROM product_product
+LEFT JOIN (
+SELECT stock_move.Product_ID AS Product_ID   , stock_move.Code AS Code
+    , sum((CASE WHEN (stock_move.Type = '0') THEN CASE WHEN stock_move.State = '20' THEN stock_move.Product_Qty ELSE 0 END ELSE (0 - CASE WHEN stock_move.State = '20' THEN stock_move.Product_Qty ELSE 0 END) END)) AS Product_Actual_Qty
+    , sum((CASE WHEN (stock_move.Type = '0') THEN stock_move.Product_Qty ELSE (0 - stock_move.Product_Qty) END)) AS Product_Enable_Qty
+    , sum((CASE WHEN (stock_move.Type = '0') THEN CASE WHEN stock_move.State = '10' THEN stock_move.Product_Qty ELSE 0 END ELSE (0 - CASE WHEN stock_move.State = '10' THEN stock_move.Product_Qty ELSE 0 END) END)) AS Product_Occupy_Qty
+FROM stock_move WHERE stock_move.State != '00' GROUP BY Product_ID, code
+ ) AS stock_move ON stock_move.Code =product_product.Code]]>
 							</value>
 						</property>
 						<property name="conditions">
