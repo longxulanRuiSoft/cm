@@ -10,6 +10,9 @@
 		<script src="../js/jquery.js" type="text/javascript"></script>
 		<script src="../ligerUI/js/ligerui.all.js" type="text/javascript"></script>
 		<script src="../js/common.js" type="text/javascript"></script>
+		<script src="../js/validate/jquery.validate.js" type="text/javascript"></script>
+		<script src="../js/validate/jquery.metadata.js" type="text/javascript"></script>
+		<script src="../js/validate/messages_zh.js" type="text/javascript"></script>
 		<script type="text/javascript">
 			var pGrid, c_row, opt, c_code;
 			var udata;
@@ -26,28 +29,29 @@
 				$("#d-menu").ligerToolBar({items:[
 				    {text:'保存',click:toAdd,icon:'save'},
 					{line:true},
-				    {text:'清空',click:resetArea,icon:'clear'},
-					{line:true},
 					{text:'确认质检',id:'quality',click:Quality,icon:'save'},
-					{line:true}
+					{line:true},
+					{text:'驳回修改',id:'toDismiss',click:toDismiss,icon:'prev'},
+				    {line:true},
+					{text:'返回',id:'toBack',click:toBack,icon:'back'},
+				    {line:true}
+
 				]});
                	pGrid = $("#p-div").ligerGrid({
                     columns:[
-						{display:'商品编号',name:'code',width:90,editor:{type:'popup',onButtonClick:selectProduct},textField:'code',valueField:'categ_id'},
+						{display:'商品编号',name:'code',width:90,textField:'code',valueField:'categ_id'},
 	                    {display:'品名',name:'name',width:150},
 			            {display:'规格/型号',name:'specs',width:150},
 			            {display:'单位',name:'product_uom',width:90,render:function(item){return paramRender(item,'uom',item.product_uom);}
 			            //,editor:{type:'select',data:getData('uom'),valueField:'value',textField:'name'}
 			            },
-			            {display:'品牌',name:'brand',width:60,render:function(item){return paramRender(item,'brand',item.brand);}
-			            ,editor:{type:'select',data:getData('Brand'),valueField:'value',textField:'name'}
-			            },
+			            {display:'品牌',name:'brand',width:60},
 			            {display:'采购数量',name:'tar_product_qty',width:90,align:'right',render:function(item){return parseFloat(item.tar_product_qty).toFixed(0);}},
-			            {display:'收货数量',name:'product_qty',width:90,id:'num',align:'right',editor:{type:'int'},render:function(item){return parseFloat(item.product_qty).toFixed(0);}},
-			            {display:'质检方式',name:'qc_type',width:150,align:'right',render:function(item){return paramRender(item,'methods',item.qc_type);}
-			            ,editor:{type:'select',data:getData('methods'),valueField:'value',textField:'name'}},
-			            {display:'质检结果',name:'qc_flag',width:150,render:function(item){return paramRender(item,'result',item.qc_flag);}
-			            ,editor:{type:'select',data:getData('result'),valueField:'value',textField:'name'}}
+			            {display:'收货数量',name:'product_qty',width:90,id:'num',align:'right'},
+			            {display:'质检方式',name:'qc_type',width:150,render:function(item){return paramRender(item,'QCType',item.qc_type);}
+			            ,editor:{type:'select',data:getData('QCType'),valueField:'value',textField:'name'}},
+			            {display:'质检结果',name:'qc_flag',width:150,render:function(item){return paramRender(item,'QCResult',item.qc_flag);}
+			            ,editor:{type:'select',data:getData('QCResult'),valueField:'value',textField:'name'}}
                     ],
                     pageSize:20,
                     usePager: true,
@@ -63,13 +67,13 @@
                     onSelectRow:function(rowdata, rowindex){$("#txtrowindex").val(rowindex);},
                     onReload: queryProd
 				});
-				appendAddBtn(function(){
-					pGrid.addEditRow();
-					c_row = pGrid.getRow(pGrid.rows.length - 1);
+// 				appendAddBtn(function(){
+// 					pGrid.addEditRow();
+// 					c_row = pGrid.getRow(pGrid.rows.length - 1);
 // 					$(".l-grid2 .l-grid-body-inner").attr("style", "");
-				}, "添加商品明细");
-				appendModifyBtn(function(){}, "修改商品明细");
-				appendDeleteBtn(deleteRow, "删除商品明细");
+// 				}, "添加商品明细");
+				//appendModifyBtn(function(){}, "修改商品明细");
+// 				appendDeleteBtn(deleteRow, "删除商品明细");
 
 				var str = window.location.toString().replace(/^[^?]+\??/, "");
 				if (str) {
@@ -118,8 +122,21 @@
                         $("#moveInIdS").val(v);
                     }
 				});
+				//质检状态
+				$("#QC_Anomaly_SateInS").ligerComboBox({
+					autocomplete: true,
+                    valueField:'value',
+                    textField:'name',
+                    data:Nomaldata,
+                    onSelected:function(v,t) {
+                        $("#QC_Anomaly_SateS").val(v);
+                    }
+				});
 				$("#pageloading").hide();
 			});
+			var Nomaldata=new function () {
+				return getData('QCAnomalySate');
+			}
 			function resetArea() {
 				toReset('#a_center input:not(.readonly),select,textarea');
 			}
@@ -149,19 +166,123 @@
 					$('#createUserS').val(paramRender(null,'user',data.createuser));
 					$('#createUserCodeS').val(data.createuser);
 					$('#createDateS').val(data.createdate);
+					//质检异常状态
+ 					$('#QC_Anomaly_SateInS').val(paramRender(null,'QCAnomalySate',data.qc_anomaly_sate));
+ 					$('#QC_Anomaly_SateS').val(data.qc_anomaly_sate);
+					//质检备注
+      				$('#QC_NoteS').val(data.qc_note);
 				}
 			}
 			function queryProd() {}
+		    function toBack()
+		    {
+		        //关闭 出库单维护界面
+		    	parent.tabManager.removeTabItem("quality_stockp"); 
+			   
+			 }
 			function toAdd() {
-				if (pGrid.rows.length === 0) {
-					$.ligerDialog.error('请添加入库商品。','错误');
-					return;
-				}
-				
-				//pGrid.endEdit(c_row.rowindex);
-				if (opt === 'm') {
-					//编辑方式
-				} 
+				var param = {
+						origin:$("#originS").val(),
+						partner:$("#partnerS").val(),
+						preddate:$("#predDateS").val(),
+						warehose:$("#warehouseS").val(),
+						moveinuser:$("#moveInIdS").val(),
+						note:$("#noteS").val()
+					};
+					var en = 'stock.add.yclrk.picking.add', optType = 'a';
+					if (opt === 'm') {
+						param.code = $('#codeS').val();
+						//修改人
+						param.writeusercode=$('#WriteUserCodeS').val();
+						//修改日期
+						param.writedate=$('#WriteDateS').val();
+						//质检日期
+						param.qc_date=$('#WriteDateS').val();
+						//质检状态
+						param.qc_anomaly_sate=$("#QC_Anomaly_SateS").val();
+						//质检结论
+						param.qc_note=$("#QC_NoteS").val();
+						// 进行修改数据库处理
+						en = 'stock.update.picking.Anomaly';
+						// 操作类型为 update
+						optType = 'u';
+					} else {
+						// 新增时 数据处理
+						param.company = "";
+						param.dept = $("#deptCodeS").val();
+						param.busiorg = "";
+						param.name = "";
+						param.type = "0";
+						param.createuser = $("#createUserCodeS").val();
+						param.createdate = $("#createDateS").val();
+						param.movetype="01";
+						param.state="00";
+						param.flow_state="00";
+						param.writedate=$('#WriteDateS').val();
+					}
+					var data = JSON.stringify(reqObj(optType,en,JSON.stringify(param)));
+					ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
+						var rows = pGrid.rows;
+						if (opt === 'm') {
+							var addRows = [], updateRows = [];
+							for (var i = 0; i < rows.length; i++) {
+								if (rows[i].__status === 'add') {
+									rows[i].picking_id = $('#codeS').val();
+									rows[i].origin = $('#originS').val();
+									rows[i].type = '0';
+									rows[i].createuser = $('#createUserCodeS').val();
+									rows[i].createdate = $('#createDateS').val();
+									rows[i].dept_id = $('#deptCodeS').val();
+									rows[i].company_id = '';
+									rows[i].busiorg_id = '';
+									addRows.push(rows[i]);
+								} else if (rows[i].__status === 'update') {
+									updateRows.push(rows[i]);
+								}
+							}
+							var ar = 0, br = 0;
+							if (addRows.length > 0) {
+								var data_a = JSON.stringify(reqObj('ba','stock.add.stock_move',addRows));
+								ajaxSubmit("/cm/rbac/cm.do?m=ba", data_a, function(result) {
+									ar = result['status'];
+									if (updateRows.length === 0)
+										$.ligerDialog.success('保存成功', '操作完成', reloadPage);
+								}, null, false);
+							} else {
+								ar = 1;
+							}
+							if (ar > 0 && updateRows.length > 0) {
+								var data_u = JSON.stringify(reqObj('bu','stock.update.stock_move', updateRows));
+								ajaxSubmit("/cm/rbac/cm.do?m=bu", data_u, function(result) {
+									$.ligerDialog.success('保存成功', '操作完成', reloadPage);
+									br = result['status'];
+								});
+							} else {
+								br = 1;
+							}
+							if (ar > 0 && br > 0) {
+								$.ligerDialog.success('保存成功', '操作完成', reloadPage);
+							}
+						} else {
+							// 新增处理
+							var picking = data['added'];
+							c_code = picking['#stock.picking.ycl.rk.code'];
+							for (var i = 0; i < rows.length; i++) {
+								rows[i].picking_id = c_code;
+								rows[i].origin = $('#originS').val();
+								rows[i].type = '0';
+								rows[i].createuser = $('#createUserCodeS').val();
+								rows[i].createdate = $('#createDateS').val();
+								rows[i].dept_id = $('#deptCodeS').val();
+								rows[i].company_id = '';
+								rows[i].busiorg_id = '';
+							}
+							var data = JSON.stringify(reqObj('ba','stock.add.stock_move',rows));
+							ajaxSubmit("/cm/rbac/cm.do?m=ba", data, function(data) {
+								$.ligerDialog.success('保存成功', '操作完成', reloadPage);
+							});
+						}
+					});
 				
 			}
 	        function beginEdit(rowid) { 
@@ -206,19 +327,28 @@
 				}
 				return '0.00';
 			}
+			// 驳回修改处理，即 退回到 制单环节
+			function toDismiss()
+			{
+				var param=new Object();
+				param.id=$('#idS').val();
+				// 驳回后状态被修改
+				param.state="09";
+				param.flow_state="00";
+				upPickingDel(param,'stock.update.picking_state.update','驳回成功','驳回失败');
+				$('#state').val(99);
+			}
+			//质检确认
 			function Quality() {
-				if($('#stateS').val()=='90')
+				if($('#stateS').val()>=30)
 					$.ligerDialog.error('已确认质检，不能重复确认，请确认！');
 				else
 					
 				   if(window.confirm('请确认物品已全部质检完成，您确定要提交该项数据吗？')==true)
-			         
-				//	var row = defGrid.getRow(rowid);
-					//$('#id').val(row.id);
-					//$('#state').val(32);
+
 					var param1=new Object();
 					param1.id=$('#idS').val();
-					param1.state='90';
+					param1.state='30';
 					param1.flow_state=$("#flow_state").val();
 					
 					 var param = JSON.stringify(reqObj('u','stock.update.picking_state.update',JSON.stringify(param1)));
@@ -226,16 +356,29 @@
 						ajaxSubmit("/cm/rbac/cm.do?m=u", param, function(data) {
 							if (data) {
 								if (parseInt(data['status']) > 0) {
-									$('#stateS').val(90);
-									$.ligerDialog.success('提交成功');
+									$('#stateS').val(30);
+									$.ligerDialog.success('确认质检成功');
 									//$("#quality").hide();
 									//toQuery();
 								} else {
-									$.ligerDialog.error('提交失败');
+									$.ligerDialog.error('确认质检失败');
 								}
 							}
 						});
 		        }
+			function upPickingDel(param1,upSqlConID,successInfo,errorInfo){
+				 var param = JSON.stringify(reqObj('u',upSqlConID,JSON.stringify(param1)));
+					
+					ajaxSubmit("/cm/rbac/cm.do?m=u", param, function(data) {
+						if (data) {
+							if (parseInt(data['status']) > 0) {								
+								$.ligerDialog.success(successInfo);
+							} else {								
+								$.ligerDialog.error(errorInfo);
+							}
+						}
+					});
+			}
 	    </script>
 		<style type="text/css">
 			.center-height{height: 100%;}
@@ -250,7 +393,7 @@
 			<div position="center" id="a_center" title="基本信息" style="overflow:auto;">
 				<div id="d-menu" class="toolbar"></div>
 				<div style="height:25px;"></div>
-				<form name="basic-form" method="post" id="basic_form">
+				<form name="basic-form" method="post" id="basic_form" class="liger-form" data-validate="{}">
 					<div class="line-div">
 						<div class="label-div"><label>入库单号</label></div>
 						<div class="in-div"><input type="text" id="codeS" ltype="text" class="readonly diff" readonly="readonly" value="由系统自动生成" /></div>
@@ -278,7 +421,7 @@
 					</div>
 					<div class="line-div">
 						<div class="label-div"><label>质检异常状态</label></div>
-						<div class="in-div" ><input type="text" id="QC_Anomaly_SateS" ltype="text" class="diff" /></div>
+						<div class="in-div" ><input type="text" id="QC_Anomaly_SateInS" ltype="combobox" class="required diff" /></div>
 						<input type="hidden" id="QC_Anomaly_SateS" />
 					</div>
 					<div class="line-div" style="height:76px;">

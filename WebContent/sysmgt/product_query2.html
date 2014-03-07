@@ -23,7 +23,10 @@
  	                    //{display:'品牌',name:'brand',width:140,minWidth:60,align:'left'},
  	                    //{display:'类型',name:'categ_id',width:120,minWidth:60,align:'left',render:function(item){return paramRender(item,'product.type2',item.categ_id);}},
  	                    //{display:'商品性质',name:'type',width:100,minWidth:60,align:'left',render:function(item){return paramRender(item,'product_category',item.type);}},
- 	                    {display:'单位',name:'uom_id',width:100,minWidth:60,align:'left',render:function(item){return paramRender(item,'uom',item.uom_id);}}
+ 	                    {display:'单位',name:'uom_id',width:100,minWidth:60,align:'left',render:function(item){return paramRender(item,'uom',item.uom_id);}},
+ 	       			    {display:'库存数量',name:'product_actual_qty',width:180,minWidth:60},
+	                    {display:'已占用数量',name:'product_occupy_qty',width:180,minWidth:60,align:'left'},
+	                    {display:'可用数量',name:'product_enable_qty',width:150,minWidth:60,align:'left'}
                     ],
                     pageSize:15,
                     usePager: true,
@@ -85,8 +88,8 @@
 				param.code=$("#codeQ").val();
 				param.name = $("#nameQ").val();
 				param.specs = $("#specsQ").val(); 
-
-				var data = JSON.stringify(reqObj('q','stock.select.product.query',JSON.stringify(param),'l',true,page,pageSize));
+// 				param.product_product.type=$("#typeQ"),val();
+            	var data = JSON.stringify(reqObj('q','stock.select.product.query',JSON.stringify(param),'l',true,page,pageSize));
 				ajaxSubmit("/cm/rbac/cm.do?m=q", data, function(data) {
                     //wws 2014-2-23 增加分页信息 start 
 					var d = data['data'].Rows;
@@ -124,6 +127,7 @@
 				<div id="query_cond" class="fields">
 				    <label>编号</label><input type="text" class="s-text-sort txt-def" id="codeQ" />
 					<label>名称</label><input type="text" class="s-text-sort txt-def" id="nameQ" />
+<!-- 					    <input id="typeQ"value="01"/> -->
 					<label>规格/型号</label><input type="text" class="s-text-sort txt-def" id="specsQ" />
 					<input type="button" value="查询" style="margin-left:25px;" onclick="toQuery();" />
 					<input type="button" value="清空" onclick="toReset('#codeQ,#originQ,#partnerQ');" />

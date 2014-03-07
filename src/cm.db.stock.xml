@@ -15,7 +15,32 @@
 						<property name="dmlType" value="cond" />
 						<property name="sql">
 							<value>
-<![CDATA[SELECT ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Partner_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser,Flow_State FROM Stock_Picking]]>
+<![CDATA[SELECT ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Partner_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser,Flow_State,QC_Note,QC_Anomaly_Sate FROM Stock_Picking]]>
+							</value>
+						</property>
+						<property name="order" value="WriteDate"/>
+                        <property name="desc" value="true"/>
+						<property name="conditions">
+							<map>
+								<entry key="code" value=":like(lr)" />
+								<entry key="origin" value=":like(lr)" />
+								<entry key="partner_id" value=":like(lr)" />
+								<entry key="state" value="" />
+								<entry key="type" value="" />
+								<entry key="move_type" value="" />
+								<entry key="createuser" value="" />
+								<entry key="move_in_user" value="" />
+								<entry key="flow_state" value=":&gt;=" />
+							</map>
+						</property>
+					</bean>
+				</entry>
+				<entry key="picking.quality.query">
+					<bean class="com.ruisoft.cm.rbac.entity.QueryEntity">
+						<property name="dmlType" value="cond" />
+						<property name="sql">
+							<value>
+<![CDATA[SELECT ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Partner_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser,Flow_State,QC_Anomaly_Sate,QC_Note FROM Stock_Picking]]>
 							</value>
 						</property>
 						<property name="conditions">
@@ -28,11 +53,11 @@
 								<entry key="move_type" value="" />
 								<entry key="createuser" value="" />
 								<entry key="move_in_user" value="" />
-								<entry key="flow_state" value=":&gt;" />
+								<entry key="flow_state" value="" />
 							</map>
 						</property>
 					</bean>
-				</entry>
+				</entry>				
 				<entry key="picking_sale.query">
 					<bean class="com.ruisoft.cm.rbac.entity.QueryEntity">
 						<property name="dmlType" value="cond" />
@@ -63,6 +88,8 @@
 <![CDATA[SELECT ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Partner_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser,Flow_State FROM Stock_Picking ]]>
 							</value>
 						</property>
+						<property name="order" value="WriteDate"/>
+                        <property name="desc" value="true"/>
 						<property name="conditions">
 							<map>
 								<entry key="code" value=":like(lr)" />
@@ -78,9 +105,11 @@
 						<property name="dmlType" value="cond" />
 						<property name="sql">
 							<value>
-<![CDATA[SELECT ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Partner_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser,Flow_State FROM Stock_Picking ]]>
+<![CDATA[SELECT ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Partner_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser,Flow_State FROM Stock_Picking]]>
 							</value>
 						</property>
+						<property name="order" value="WriteDate"/>
+                        <property name="desc" value="true"/>
 						<property name="conditions">
 							<map>
 								<entry key="code" value=":like(lr)" />
@@ -92,10 +121,6 @@
 								
 							</map>
 						</property>
-						<property name="order" value="WriteDate"/>
-							 
-						<property name="desc" value="true"/>
-							 
 					</bean>
 				</entry>
 				<entry key="picking_nomal.query">
@@ -103,9 +128,11 @@
 						<property name="dmlType" value="cond" />
 						<property name="sql">
 							<value>
-<![CDATA[SELECT ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Partner_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser,Flow_State FROM Stock_Picking ]]>
+<![CDATA[SELECT ID,Company_ID,Dept_ID,BusiOrg_ID,Code,Name,Type,Move_Type,Send_Type,Origin,Purchase_ID,Sale_ID,Project_ID,Partner_ID,Warehose_ID,Pred_Date,Recpt_IN_Date,QC_Date,Recpt_Out_Date,Deal_End_Date,State,Invoice_State,Auto_Picking,Back_Order_ID,Account_Date,Stock_Journal_ID,Move_IN_User,Move_Out_User,Move_Destined,Note,CreateUser,CreateDate,WriteDate,WriteUser,Flow_State FROM Stock_Picking]]>
 							</value>
 						</property>
+						<property name="order" value="WriteDate"/>
+                        <property name="desc" value="true"/>
 						<property name="conditions">
 							<map>
 								<entry key="code" value=":like(lr)" />
@@ -116,9 +143,6 @@
 								<entry key="move_in_user" value="" />
 							</map>
 						</property>
-						<property name="order" value="WriteDate"/>
-							 
-						<property name="desc" value="true"/>
 					</bean>
 				</entry>
 				<entry key="product.query">
@@ -126,7 +150,10 @@
 						<property name="dmlType" value="cond" />
 						<property name="sql">
 							<value>
-<![CDATA[SELECT Product_Actual_Qty,Product_Enable_Qty,Product_Occupy_Qty,product_product.ID,product_product.COMPANY_ID,product_product.DEPT_ID,product_product.BUSIORG_ID,product_product.TYPE,product_product.CATEG_ID,product_product.CODE,product_product.NAME,product_product.SHORT_NAME,product_product.HELP_TAG,product_product.BAR_CODE,product_product.SPECS,product_product.BRAND,product_product.WARRANTY,product_product.UOM_ID,product_product.UOM_PRECISION,product_product.EACH_WEIGHT,product_product.WEIGHT_UNIT_ID,product_product.EACH_VOLUME,product_product.VOLUME_UNIT_ID,product_product.SUPPLY_METHOD,product_product.PURCHASE_OK,product_product.SALE_OK,product_product.SALE_DELAY,product_product.DESC_PURCHASE,product_product.PRODUCE_DELAY,product_product.PRODUCT_MANAGER,product_product.PROCURE_METHOD,product_product.COST_METHOD,product_product.DESC_SALE,product_product.LOC_RACK,product_product.LOC_ROW,product_product.STATE,product_product.NOTE,product_product.CREATECOMPANY_ID,product_product.CREATEDATE,product_product.CREATEUSER,product_product.WRITEDATE,product_product.WRITEUSER
+<![CDATA[SELECT CASE WHEN Product_Actual_Qty IS NULL THEN 0 ELSE Product_Actual_Qty END AS Product_Actual_Qty,
+CASE WHEN Product_Enable_Qty IS NULL THEN 0 ELSE Product_Enable_Qty END AS Product_Enable_Qty,
+CASE WHEN Product_Occupy_Qty IS NULL THEN 0 ELSE Product_Occupy_Qty END AS Product_Occupy_Qty,
+product_product.ID,product_product.COMPANY_ID,product_product.DEPT_ID,product_product.BUSIORG_ID,product_product.TYPE,product_product.CATEG_ID,product_product.CODE,product_product.NAME,product_product.SHORT_NAME,product_product.HELP_TAG,product_product.BAR_CODE,product_product.SPECS,product_product.BRAND,product_product.WARRANTY,product_product.UOM_ID,product_product.UOM_PRECISION,product_product.EACH_WEIGHT,product_product.WEIGHT_UNIT_ID,product_product.EACH_VOLUME,product_product.VOLUME_UNIT_ID,product_product.SUPPLY_METHOD,product_product.PURCHASE_OK,product_product.SALE_OK,product_product.SALE_DELAY,product_product.DESC_PURCHASE,product_product.PRODUCE_DELAY,product_product.PRODUCT_MANAGER,product_product.PROCURE_METHOD,product_product.COST_METHOD,product_product.DESC_SALE,product_product.LOC_RACK,product_product.LOC_ROW,product_product.STATE,product_product.NOTE,product_product.CREATECOMPANY_ID,product_product.CREATEDATE,product_product.CREATEUSER,product_product.WRITEDATE,product_product.WRITEUSER
 FROM product_product
 LEFT JOIN (
 SELECT stock_move.Product_ID AS Product_ID   , stock_move.Code AS Code
@@ -142,6 +169,7 @@ FROM stock_move WHERE stock_move.State != '00' GROUP BY Product_ID, code
 								<entry key="code" value=":like(lr)" />
 								<entry key="name" value=":like(lr)" />
 								<entry key="specs" value=":like(lr)" />
+								<entry key="product_product.type" value=""></entry>
 							</map>
 						</property>
 					</bean>
@@ -152,7 +180,8 @@ FROM stock_move WHERE stock_move.State != '00' GROUP BY Product_ID, code
 						<property name="dmlType" value="cond" />
 						<property name="sql">
 							<value>
-<![CDATA[SELECT Stock_Move.ID,Stock_Move.Company_ID,Stock_Move.Dept_ID,Stock_Move.BusiOrg_ID,Stock_Move.Picking_ID,Stock_Move.Origin,Stock_Move.Purchase_ID, Stock_Move.Purchase_Line_ID,Stock_Move.Sale_ID,Stock_Move.Sale_Line_ID,Stock_Move.Type,Stock_Move.Product_ID,Stock_Move.Code,Stock_Move.Name,product_product.Specs, Stock_Move.Ware_Hose_ID,Stock_Move.Location_ID, Stock_Move.Product_Uom, Stock_Move.Price_Currency, Stock_Move.Source_Price_Unit, Stock_Move.Price_Unit, Stock_Move.Tar_Product_Qty, Stock_Move.Product_Qty, Stock_Move.Pred_Date, Stock_Move.Real_Date, Stock_Move.Move_End_Date, Stock_Move.QC_Type, Stock_Move.QC_Flag, Stock_Move.State, Stock_Move.Inventory_State, Stock_Move.Valuation_State, Stock_Move.Busi_Batch, Stock_Move.Auto_Picking, Stock_Move.Note, Stock_Move.CreateUser, Stock_Move.CreateDate, Stock_Move.WriteDate, Stock_Move.WriteUser,Stock_Move.Brand  
+<![CDATA[SELECT Stock_Move.ID,Stock_Move.Company_ID,Stock_Move.Dept_ID,Stock_Move.BusiOrg_ID,Stock_Move.Picking_ID,Stock_Move.Origin,Stock_Move.Purchase_ID, Stock_Move.Purchase_Line_ID,Stock_Move.Sale_ID,Stock_Move.Sale_Line_ID,Stock_Move.Type,Stock_Move.Product_ID,Stock_Move.Code,Stock_Move.Name,product_product.Specs, Stock_Move.Ware_Hose_ID,Stock_Move.Location_ID, Stock_Move.Product_Uom, Stock_Move.Price_Currency, Stock_Move.Source_Price_Unit, Stock_Move.Price_Unit, Stock_Move.Tar_Product_Qty, Stock_Move.Product_Qty, Stock_Move.Pred_Date, Stock_Move.Real_Date, Stock_Move.Move_End_Date, Stock_Move.QC_Type, Stock_Move.QC_Flag, Stock_Move.State, Stock_Move.Inventory_State, Stock_Move.Valuation_State, Stock_Move.Busi_Batch, Stock_Move.Auto_Picking, Stock_Move.Note, Stock_Move.CreateUser, Stock_Move.CreateDate, Stock_Move.WriteDate, Stock_Move.WriteUser,Stock_Move.Brand
+,Stock_Move.QC_Type,Stock_Move.QC_Flag,Stock_Move.product_actual_qty,Stock_Move.product_occupy_qty,Stock_Move.product_enable_qty   
 FROM Stock_Move
 LEFT JOIN product_product ON Stock_Move.Code=product_product.Code]]>
 							</value>
@@ -278,8 +307,8 @@ VALUES({#uuid},{company},{dept},{busiorg},{#stock.picking.code},{name},{type},{m
 					<bean class="com.ruisoft.cm.rbac.entity.AddEntity">
 						<property name="sql">
 							<value>
-<![CDATA[INSERT INTO STOCK_MOVE(ID,COMPANY_ID,DEPT_ID,BUSIORG_ID,PICKING_ID,ORIGIN,PURCHASE_ID,PURCHASE_LINE_ID,SALE_ID,SALE_LINE_ID,TYPE,PRODUCT_ID,CODE,NAME,PARTNER_ID,WARE_HOSE_ID,LOCATION_ID,PRODUCT_UOM,PRICE_CURRENCY,SOURCE_PRICE_UNIT,PRICE_UNIT,TAR_PRODUCT_QTY,PRODUCT_QTY,PRED_DATE,REAL_DATE,MOVE_END_DATE,QC_TYPE,QC_FLAG,STATE,INVENTORY_STATE,VALUATION_STATE,BUSI_BATCH,AUTO_PICKING,NOTE,CREATEUSER,CREATEDATE,WRITEDATE,WRITEUSER,Brand)
-VALUES({#stock.picking_move.id},{company_id},{dept_id},{busiorg_id},{picking_id},{origin},{purchase_id},{purchase_line_id},{sale_id},{sale_line_id},{type},{product_id},{code},{name},{partner_id},{ware_hose_id},{location_id},{product_uom},{price_currency},{source_price_unit},{price_unit},{tar_product_qty},{product_qty},{pred_date},{real_date},{move_end_date},{qc_type},{qc_flag},{state},{inventory_state},{valuation_state},{busi_batch},{auto_picking},{note},{createuser},{createdate},{writedate},{writeuser},{brand})]]>
+<![CDATA[INSERT INTO STOCK_MOVE(ID,COMPANY_ID,DEPT_ID,BUSIORG_ID,PICKING_ID,ORIGIN,PURCHASE_ID,PURCHASE_LINE_ID,SALE_ID,SALE_LINE_ID,TYPE,PRODUCT_ID,CODE,NAME,PARTNER_ID,WARE_HOSE_ID,LOCATION_ID,PRODUCT_UOM,PRICE_CURRENCY,SOURCE_PRICE_UNIT,PRICE_UNIT,TAR_PRODUCT_QTY,PRODUCT_QTY,PRED_DATE,REAL_DATE,MOVE_END_DATE,QC_TYPE,QC_FLAG,STATE,INVENTORY_STATE,VALUATION_STATE,BUSI_BATCH,AUTO_PICKING,NOTE,CREATEUSER,CREATEDATE,WRITEDATE,WRITEUSER,product_actual_qty,product_occupy_qty,product_enable_qty,Brand)
+VALUES({#stock.picking_move.id},{company_id},{dept_id},{busiorg_id},{picking_id},{origin},{purchase_id},{purchase_line_id},{sale_id},{sale_line_id},{type},{product_id},{code},{name},{partner_id},{ware_hose_id},{location_id},{product_uom},{price_currency},{source_price_unit},{price_unit},{tar_product_qty},{product_qty},{pred_date},{real_date},{move_end_date},{qc_type},{qc_flag},{state},{inventory_state},{valuation_state},{busi_batch},{auto_picking},{note},{createuser},{createdate},{writedate},{writeuser},{product_actual_qty},{product_occupy_qty},{product_enable_qty},{brand})]]>
 							</value>
 						</property>
 					</bean>
@@ -337,11 +366,34 @@ Warehose_ID={warehose_id},Move_IN_User={move_in_user},Note={note},WriteUser={wri
 						</property>
 					</bean>
 				</entry>
+				<entry key="picking.Anomaly">
+					<bean class="com.ruisoft.cm.rbac.entity.UpdateEntity">
+						<property name="sql">
+							<value>
+<![CDATA[UPDATE STOCK_PICKING SET WriteUser={writeusercode},WriteDate={writedate},QC_Anomaly_Sate={qc_anomaly_sate}
+,QC_Date={qc_date},QC_Note={qc_note} WHERE CODE={code}]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
 				<entry key="stock_move">
 					<bean class="com.ruisoft.cm.rbac.entity.UpdateEntity">
 						<property name="sql">
 							<value>
-<![CDATA[UPDATE STOCK_MOVE SET CODE={code},NAME={name},TAR_PRODUCT_QTY={tar_product_qty},PRODUCT_QTY={product_qty},ORIGIN={origin},PRODUCT_UOM={product_uom},SOURCE_PRICE_UNIT={source_price_unit},PRICE_UNIT={price_unit} WHERE ID={id}]]>
+<![CDATA[UPDATE STOCK_MOVE SET CODE={code},NAME={name},TAR_PRODUCT_QTY={tar_product_qty},PRODUCT_QTY={product_qty}
+,ORIGIN={origin},PRODUCT_UOM={product_uom},SOURCE_PRICE_UNIT={source_price_unit}
+,PRICE_UNIT={price_unit},QC_Flag={qc_flag},QC_Type={qc_type}
+,product_actual_qty={product_actual_qty},product_occupy_qty={product_actual_qty},product_enable_qty={product_actual_qty} WHERE ID={id}]]>
+							</value>
+						</property>
+					</bean>
+				</entry>
+				<!-- 单据提交时修改 修改商品列表数据的单据状态 -->
+				<entry key="stock_move_state.update">
+					<bean class="com.ruisoft.cm.rbac.entity.UpdateEntity">
+						<property name="sql">
+							<value>
+<![CDATA[UPDATE Stock_move SET State={state} WHERE Picking_ID={code}]]>
 							</value>
 						</property>
 					</bean>

@@ -29,44 +29,34 @@
                     columns:[
  						{display:'操作',isSort:false,width:120,render:function(rowdata,rowindex,value) {
 							
- 							// 单据状态 state      00 新建  10 未审核 20 已审核 30 未提交 40已提交  50 已驳回
- 							// 流程状态 flow_state 00 新建（制单） 10 入库质检     20 入、出库审核   30 打印出入库单   40 入、出库确认    50 入、出库完成							
+							// 制单环节：单据状态  state      00 未审核     >>审核 >>    10 已审核     >>提交>>     20已提交                 99 驳回修改
+							// 质检环节：                                               20 待质检    >>质检确认>>  30已质检     >>审核>>      40已审核  >>提交>>  50已提交
+							// 出入库确认环节                                       50待打印     >>打印>>     60已打印   >>出入库确认>>   70出库完成           
+							
+							// 流程状态 flow_state 00 新建（制单） 10 入库质检     20入、出库确认    30 入、出库完成
 							var h = "";
 							var row = defGrid.getRow(rowindex);
-
-							//再进行出库审核
-							
-							//  if( row.state <= '10' && row.flow_state =='30'   ){
-								 // h = "未审核  "
-							  ///}
-							
-// 							  if(row.state  >= '20' && row.flow_state =='30'){
-// 								  h = "已审核  ";
-// 							  	}
-							  
 							//打印出库单
-							  if(row.state  >= '20' && row.flow_state =='30'){							
+							  if(row.state  <= 50 ){							
  									h += "<a href='javascript:void(0);' class='opt-link' onclick='toPrint(" + rowindex + ")'>打印</a> ";
 							  	}
-							  if(row.flow_state >'30')
-								 h += "打印完成  ";
+							  if(row.flow_state > 50)
+								 h += "已打印  "; 
+							  
 							//待确认出库 ，在里面进行 确认出库 
- 							 if(row.state == '20' && row.flow_state =='30')
+ 							 if(row.state <= 60 )
                                h += "待确认出库 ";
 							
- 							 if(row.flow_state >='50') 
+ 							 if(row.flow_state >='70') 
 							  	{  								
  								h += "出库完成  ";
 							  	}
  							 //驳回
- 	 						 if(row.state  == '60') 
+ 	 						 if(row.state  == '09') 
 	 							{
- 									h = "已驳回 ";
+ 									h = "已驳回修改 ";
 	 							}
- 							//先接收待办任务
- 							if( row.state == '40' && row.flow_state =='30'   ){
-  							    h = "<a href='javascript:void(0);' class='opt-link' onclick='toReceive(" + rowindex + ")'>接收出库待办</a> ";
- 							  }
+
                         	 return h; 
                         },frozen:true},
                         //{display:'单据类型',name:'move_type',width:90,minWidth:60,render:function(item){return paramRender(item,'stockBillType',item.move_type);}},
@@ -93,6 +83,35 @@
                     clickToEdit:false,
                     onSelectRow:function(rowdata, rowindex){$("#txtrowindex").val(rowindex);},
                     onReload: toQuery,
+                    url: '../common/q.jsp', 
+                    //wws 2014-2-23 增加分页信息 start
+                      onToFirst: function(item) {
+                          toQuery(item, 1);
+                      },
+                      onToLast: function(item) {
+          				var p = parseInt(defGrid.options.total / defGrid.options.pageSize);
+          				if (defGrid.options.total % defGrid.options.pageSize > 0)
+          					p += 1;
+          				toQuery(item, p);
+                      },
+                      onToPrev: function(item) {
+          				var p = parseInt(defGrid.options.page);
+          				if (p > 1)
+          					p -= 1;
+          				else
+              				return;
+          				toQuery(item, p);
+                      },
+                      onToNext: function(item) {
+                      	var p = parseInt(defGrid.options.total / defGrid.options.pageSize);
+          				if (defGrid.options.total % defGrid.options.pageSize > 0)
+          					p += 1;
+      					var cp = parseInt(defGrid.options.page); 
+      					if (cp < p)
+          					cp += 1;
+          				toQuery(item, cp);
+                      },
+                      //wws 2014-2-23 增加分页信息 end 
                     param_movein:'user',
                     param_warehose:'base_point',
                     param_partner:'partner_list'
@@ -147,44 +166,34 @@
 				}
 				
                 param.move_in_user=$('#UserCodeS').val();
-                //处理flow_state大于20的数据
+                //处理flow_state  >= 20的数据
                 param.flow_state='20';
                 //alert($('#UserCodeS').val());
 				var data = JSON.stringify(reqObj('q','stock.select.picking.query',JSON.stringify(param),'l',true,page,pageSize));
 				ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
+					 //wws 2014-2-23 增加分页信息 start 
+					var d = data['data'].Rows;
+					var ps = defGrid.options.pageSize, p = defGrid.options.page, t = parseInt(data['data'].Total);
+					if (t > ps) {
+						for (var i = 0; i < (p - 1) * ps; i++) {
+							d.unshift(null);
+						}
+					}
+					defGrid.data = data['data'];
+					 //wws 2014-2-23 增加分页信息  end 
 					defGrid.set({data: data['data']});
 				});
 			}
 
-			// 单据状态 state      00 新建  10 未审核 20 已审核 30 未提交 40已提交  50 已驳回
-			// 流程状态 flow_state 00 新建（制单） 10 入库质检     20 入、出库审核   30 打印出入库单   40 入、出库确认    50 入、出库完成
-			
-			// 接收待办
-			function toReceive(rowid)
-			{
-				var row = defGrid.getRow(rowid);
-				var param=new Object();
-				param.id=row.id;				
-				// 驳回后状态被修改
-				param.state='20';
-				param.flow_state=row.flow_state
-				upPickingDel(param,'stock.update.picking_state.update','接受成功','接受失败');
-				$('#state').val('20');
-			}
 
 			//打印处理
 			var printWin;
 			function toPrint(rowid) {
 				var row = defGrid.getRow(rowid);
-				
-					
-				if(row.state=='20'){
-					$.ligerDialog.error('该单据未审核，不能打印，请确认！');
-					return;					
-				}
+
 				
 				var printFlag =false
-				if(row.flow_state >='40'){
+				if(row.state >='60'){
 					if(window.confirm('该单据已打印过，请确认是否需要第二次打印？')==true)
 				    printFlag=true;
 // 					$.ligerDialog.error('已打印请勿重复打印，不能打印，请确认！');

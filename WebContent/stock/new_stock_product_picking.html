@@ -73,7 +73,7 @@
 					c_row = pGrid.getRow(pGrid.rows.length - 1);
 // 					$(".l-grid2 .l-grid-body-inner").attr("style", "");
 				}, "添加商品明细");
-				appendModifyBtn(function(){}, "修改商品明细");
+				//appendModifyBtn(function(){}, "修改商品明细");
 				appendDeleteBtn(deleteRow, "删除商品明细");
 
 				var str = window.location.toString().replace(/^[^?]+\??/, "");
@@ -216,8 +216,7 @@
 		    	parent.tabManager.removeTabItem("new_productd");
 			}		
 			function queryProd() {}
-			function toAdd() {
-				// 必输数据项校验控制
+			function validate() {
 				var valid = true;
 				$('*[id$="S"],*[id$="S_txt"]').each(function(index, element) {
 					if (!$(this).rules()) return;
@@ -226,12 +225,39 @@
 						return;
 					}
 				});
-				if (!valid) return;
+				if (!valid) return false;
+				
 				if (pGrid.rows.length === 0) {
 					$.ligerDialog.error('请添加入库商品。','错误');
-					return;
+					return false;
 				}
 				
+				var r, result;
+				var i = 0;
+				for (; i < pGrid.rows.length; i++) {
+					r = pGrid.rows[i];
+					if (!r.code) {
+						result = '商品编号不能为空';
+						break;
+					}
+					
+				
+					if (!r.price_unit || parseInt(r.price_unit) === 0) {
+						result = '入库单价必须录入大于0的数值';
+						break;
+					}
+				}
+
+				if (result) {
+					$.ligerDialog.error('入库商品列表第[' + (++i) + ']行存在错误<br/>原因：'.concat(result), '数据错误');
+					return false;
+				}
+				return true;
+			}
+			function toAdd() {
+				pGrid.endEdit();
+				if (!validate())
+					return;
 				var param = {
 					origin:$("#originS").val(),
 					partner:$("#partnerS").val(),
@@ -484,7 +510,7 @@
 						<div class="label-div"><label>入库单号</label></div>
 						<div class="in-div"><input type="text" id="codeS" ltype="text" class="readonly diff" readonly="readonly" value="由系统自动生成" /></div>
 						<div class="label-div"><label>产品任务单号</label></div>
-						<div class="in-div"><input type="text" id="originS" ltype="text" class="diff" /></div>
+						<div class="in-div"><input type="text" id="originS" ltype="text" class="required diff" /></div>
 					</div>
                 	<div class="line-div">
 						<!--<div class="label-div"><label>供应商</label></div>
@@ -493,18 +519,18 @@
 						<input type="hidden" id="partnerS" />
 						</div>-->
 						<div class="label-div"> <label>入库日期</label></div>
-						<div class="in-div"><input type="text" id="predDateS" ltype="date" class="diff" /></div>
+						<div class="in-div"><input type="text" id="predDateS" ltype="date" class="required diff" /></div>
 					</div>
                 	<div class="line-div">
 						<div class="label-div"><label>入库仓库</label></div>
 						<div class="in-div">
 						<!--  <input type="text" id="warehouseS" ltype="text" class="diff" />
 						-->
-						<input type="text" id="warehouseInS" ltype="combobox" class="diff" />
+						<input type="text" id="warehouseInS" ltype="combobox" class="required diff" />
 						<input type="hidden" id="warehouseS" />
 						</div>
 						<div class="label-div"><label>收货人</label></div>
-						<div class="in-div"><input type="text" id="moveInS" ltype="combobox" class="diff" /></div>
+						<div class="in-div"><input type="text" id="moveInS" ltype="combobox" class="required diff" /></div>
 						<input type="hidden" id="moveInIdS" />
 					</div>
 					<div class="line-div" style="height:76px;">

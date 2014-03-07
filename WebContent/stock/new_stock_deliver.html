@@ -10,6 +10,9 @@
 		<script src="../js/jquery.js" type="text/javascript"></script>
 		<script src="../ligerUI/js/ligerui.all.js" type="text/javascript"></script>
 		<script src="../js/common.js" type="text/javascript"></script>
+				<script src="../js/validate/jquery.validate.js" type="text/javascript"></script>
+		<script src="../js/validate/jquery.metadata.js" type="text/javascript"></script>
+		<script src="../js/validate/messages_zh.js" type="text/javascript"></script>
 		<script type="text/javascript">
 			var pGrid, c_row, opt, c_code;
 			var udata;
@@ -39,13 +42,17 @@
 				]});
                	pGrid = $("#p-div").ligerGrid({
                     columns:[
-						{display:'商品编号',name:'code',width:90,editor:{type:'popup',onButtonClick:selectProduct},textField:'code',valueField:'categ_id'},
-	                    {display:'品名',name:'name',width:150},
-			            {display:'规格/型号',name:'specs',width:150,render:function(item){return paramRender(item,'product_specs',item.code);}},
-			            {display:'单位',name:'product_uom',width:90,render:function(item){return paramRender(item,'uom',item.product_uom);},editor:{type:'select',data:getData('uom'),valueField:'value',textField:'name'}},
-			            {display:'品牌',name:'brand',width:60,render:function(item){return paramRender(item,'brand',item.brand);},editor:{type:'select',data:getData('Brand'),valueField:'value',textField:'name'}},
-			            {display:'出库数量',name:'product_qty',width:90,id:'num',align:'right',editor:{type:'int'},render:function(item){return parseFloat(item.product_qty).toFixed(0);}},
-			           
+                         	{display:'商品编号',name:'code',width:160,editor:{type:'popup',onButtonClick:selectProduct},textField:'code',valueField:'categ_id'},
+    	                    {display:'品名',name:'name',width:160},
+    			            {display:'规格/型号',name:'specs',width:160},
+    			        	{display:'单位',name:'product_uom',width:100,render:function(item){return paramRender(item,'uom',item.product_uom);}},
+    			            {display:'品牌',name:'brand',width:60,render:function(item){return paramRender(item,'brand',item.brand);}
+    			            ,editor:{type:'select',data:getData('Brand'),valueField:'value',textField:'name'}},
+//     			            {display:'库存数量',name:'product_actual_qty',width:100,align:'right'},
+//     			            {display:'已占用数量',name:'product_occupy_qty',width:100,align:'right'},
+//     			            {display:'可用数量',name:'product_enable_qty',width:100,align:'right'},
+    			            {display:'出库数量',name:'product_qty',width:100,align:'right',editor:{type:'string'},render:function(item){return item.product_qty ? parseFloat(item.product_qty).toFixed(0) : '';}}
+    			     
                     ],
                     pageSize:20,
                     usePager: true,
@@ -188,36 +195,28 @@
 				
 			}
 			
-			// 单据状态 state      00 新建  10 未审核 20 已审核 30 未提交 40已提交  50 已驳回
-			// 流程状态 flow_state 00 新建（制单） 10 入库质检     20 入、出库审核   30 打印出入库单   40 入、出库确认    50 入、出库完成
-			// 驳回修改处理，即 退回到 
+
+			// 驳回修改处理，即 退回到 制单环节
 			function toDismiss()
 			{
 				var param=new Object();
-				param.id=$('#idH').val();
+				param.id=$('#id').val();
 				// 驳回后状态被修改
-				param.state="50";
+				param.state="09";
+				param.flow_state="00";
 				upPickingDel(param,'stock.update.picking_state.update','驳回成功','驳回失败');
 				$('#state').val(50);
 			}
-			// 审核确认
-			function toConfirm() {
-				var param=new Object();
-				param.id=$('#id').val();
-				//已审核 20
-				param.state='20';                
-				upPickingDel(param,'stock.update.picking_state.update','确认出库成功','确认出库失败');		
-					
-		        }
+
 			//确认出库
 			function submitConfirm() {
 			  			
-				if($('#state').val()=='40')
+				if($('#state').val()=='70')
 					{
-					$.ligerDialog.error('已确认出库，不能重复出库确认，请确认！');
+					$.ligerDialog.error('已确认出库，不能重复确认，请确认！');
 				   return;
 					}
-				else if($('#flow_state').val()=='30')
+				else if($('#flow_state').val()=='50')
 					{
 					$.ligerDialog.error('该单据未打印，不能确认出库，请确认！');
 					return;
@@ -227,27 +226,24 @@
 				   if(window.confirm('您确定要提交该项数据吗？')==true)
     				var param=new Object();
 					param.id=$('#id').val();
-					//已提交 40
-					param.state='40';
+					//
+					param.state='70';
 					// 确认出库后流程为出库完成
-					param.flow_state='50';
+					param.flow_state='30';
                 
 					upPickingDel(param,'stock.update.picking_state.update','确认出库成功','确认出库失败');
 					//已提交 40
-					$('#state').val('40');
-					$('#flow_state').val('50');
+					$('#state').val('70');
+					$('#flow_state').val('30');
 					}
 		        }
 			//打印处理
 			var printWin;
 			function toPrint(rowid) {
-				if(!$('#state').val()=='20'){
-					$.ligerDialog.error('该单据未审核，不能打印，请确认！');
-					return;					
-				}
+	
 				
 				var printFlag =false
-				if(!$('#flow_state').val() >='40'){
+				if(!$('#state').val() >='60'){
 					if(window.confirm('该单据已打印过，请确认是否需要第二次打印？')==true)
 				    printFlag=true;
 // 					$.ligerDialog.error('已打印请勿重复打印，不能打印，请确认！');
@@ -260,15 +256,15 @@
 					//printWin = $.ligerDialog.open({height:600,width:800,url:'./print_stock_pocket_picking.html?id='.concat(defGrid.getRow(rowid).code),title:'打印入库单'});
 					var param=new Object();
 					param.id=$('#id').val();
-					//已提交 40
-					param.state=$('#state').val();
+					
+					param.state="60";
 					// 确认出库后流程为出库完成
-					param.flow_state='40';
+					param.flow_state=$('#flow_state').val();
                 
 					upPickingDel(param,'stock.update.picking_state.update','打印成功','打印失败');
 					//已提交 40
 				
-					$('#flow_state').val('40');
+					$('#state').val('60');
 				}
 			}			
 			
@@ -324,7 +320,7 @@
 			<div position="center" id="a_center" title="基本信息" style="overflow:auto;">
 				<div id="d-menu" class="toolbar"></div>
 				<div style="height:25px;"></div>
-				<form name="basic-form" method="post" id="basic_form">
+				<form name="basic-form" method="post" id="basic_form" class="liger-form" data-validate="{}">
 					<div class="line-div">
 						<div class="label-div"><label>出库单号</label></div>
 						<div class="in-div"><input type="text" id="codeS" ltype="text" class="readonly diff" readonly="readonly" value="由系统自动生成" /></div>
@@ -343,7 +339,7 @@
 						<input type="hidden" id="warehouseS" />
 						</div>
 						<div class="label-div"><label>发货人</label></div>
-						<div class="in-div"><input type="text" id="moveInS" ltype="combobox" class="diff" /></div>
+						<div class="in-div"><input type="text" id="moveInS" ltype="combobox" class="required diff" /></div>
 						<input type="hidden" id="moveInIdS" />
 					</div>
 					<div class="line-div" style="height:76px;">

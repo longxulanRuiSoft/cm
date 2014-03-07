@@ -111,7 +111,7 @@
                     }
 				});
 				$("#warehouseInS").ligerComboBox({
-					autocomplete: false,
+					autocomplete: true,
                     valueField:'value',
                     textField:'name',
                     data:get_warehose_list,
@@ -233,6 +233,10 @@
 					}
 					if (!r.price_unit || parseInt(r.price_unit) === 0) {
 						result = '入库单价必须录入大于0的数值';
+						break;
+					}
+					if(parseInt(r.tar_product_qty)< parseInt(r.product_qty)  ){
+						result="入库数量不能大于采购数量，请修改入库数量";
 						break;
 					}
 				}

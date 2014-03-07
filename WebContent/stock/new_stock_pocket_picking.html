@@ -43,10 +43,10 @@
 			        	{display:'单位',name:'product_uom',width:100,render:function(item){return paramRender(item,'uom',item.product_uom);}},
 			            {display:'品牌',name:'brand',width:60,render:function(item){return paramRender(item,'brand',item.brand);}
 			            ,editor:{type:'select',data:getData('Brand'),valueField:'value',textField:'name'}},
-			            {display:'库存数量',name:'',width:100,align:'right',editor:{type:'int'},render:function(item){return parseFloat(item.product_qty).toFixed(0);}},
-			            {display:'已占用数量',name:'',width:100,align:'right',editor:{type:'int'},render:function(item){return parseFloat(item.product_qty).toFixed(0);}},
-			            {display:'可用数量',name:'',width:100,align:'right',editor:{type:'int'},render:function(item){return parseFloat(item.product_qty).toFixed(0);}},
-			            {display:'出库数量',name:'product_qty',width:100,align:'right',editor:{type:'int'},render:function(item){return parseFloat(item.product_qty).toFixed(0);}}
+			            {display:'库存数量',name:'product_actual_qty',width:100,align:'right'},
+			            {display:'已占用数量',name:'product_occupy_qty',width:100,align:'right'},
+			            {display:'可用数量',name:'product_enable_qty',width:100,align:'right'},
+			            {display:'出库数量',name:'product_qty',width:100,align:'right',editor:{type:'string'},render:function(item){return item.product_qty ? parseFloat(item.product_qty).toFixed(0) : '';}}
 			        ],
                     pageSize:20,
                     usePager: true,
@@ -61,7 +61,7 @@
                     enabledEdit:true,
                     clickToEdit:true,
                     onSelectRow:function(rowdata, rowindex){$("#txtrowindex").val(rowindex);},
-                    onReload: queryProd,                   
+                    onReload: queryProd,
                     param_partner:'partner_list'
 				});
                	//
@@ -70,7 +70,7 @@
 					c_row = pGrid.getRow(pGrid.rows.length - 1); 
 				}, "添加商品明细");
                	//  此功能还未实现
-				appendModifyBtn(function(){}, "编辑商品明细");
+				//appendModifyBtn(function(){}, "编辑商品明细");
                	//
 				appendDeleteBtn(deleteRow, "删除商品明细");
 				// 此段代码需增加 注释说明
@@ -148,7 +148,55 @@
 				
 				$("#pageloading").hide();
 			});
-			
+			function validate() {
+				var valid = true;
+				$('*[id$="S"],*[id$="S_txt"]').each(function(index, element) {
+					if (!$(this).rules()) return;
+					if (!$(element).valid()) {
+						valid = false;
+						return;
+					}
+				});
+				if (!valid) return false;
+				
+				if (pGrid.rows.length === 0) {
+					$.ligerDialog.error('请添加入库商品。','错误');
+					return false;
+				}
+				
+				var r, result;
+				var i = 0;
+				for (; i < pGrid.rows.length; i++) {
+					r = pGrid.rows[i];
+					if (!r.code) {
+						result = '商品编号不能为空';
+						break;
+					}
+					if (!r.product_qty || parseInt(r.product_qty) < 1) {
+						result = '出库数量必须录入大于0的整数';
+						break;
+					}
+				
+					if ( parseInt(r.product_qty) >parseInt(r.product_enable_qty) ) {
+						result = '出库数量不能大于可用数量';
+						break;
+					}
+// 					if (!r.source_price_unit || parseInt(r.source_price_unit) === 0) {
+// 						result = '采购单价必须录入大于0的数值';
+// 						break;
+// 					}
+// 					if (!r.price_unit || parseInt(r.price_unit) === 0) {
+// 						result = '入库单价必须录入大于0的数值';
+// 						break;
+// 					}
+				}
+
+				if (result) {
+					$.ligerDialog.error('入库商品列表第[' + (++i) + ']行存在错误<br/>原因：'.concat(result), '数据错误');
+					return false;
+				}
+				return true;
+			}
 			var get_warehose_list=new function () {
 				return getData('base_point');
 			}
@@ -175,6 +223,10 @@
 				            pGrid.updateCell('specs', data.specs, pGrid.getSelected());
 				            pGrid.updateCell('product_uom', data.uom_id, pGrid.getSelected());
 				            pGrid.updateCell('code', data.code, pGrid.getSelected());
+				            pGrid.updateCell('product_actual_qty', data.product_actual_qty, pGrid.getSelected());
+				            pGrid.updateCell('product_enable_qty', data.product_enable_qty, pGrid.getSelected());
+				            pGrid.updateCell('product_occupy_qty', data.product_occupy_qty, pGrid.getSelected());
+				   
 				            dialog.close();
 						}},
 					    {text:'取消',onclick: function(item, dialog){
@@ -284,8 +336,7 @@
 					param.type = "1";
 					// 指单据类型 ，03  生产领用单
 					param.movetype="03";
-					// 单据状态 state      00 新建  10 未审核 20 已审核 30 未提交 40已提交  50 已驳回
-					// 流程状态 flow_state 00 新建（制单） 10 入库质检     20 入、出库审核   30 打印出入库单   40 入、出库确认    50 入、出库完成					 
+				 
 					param.state="00";
 					// 单据流程状态 是指， 单据的流转去向，及业务流程中的各处理环节 如：生产领用单据   生产管理中制单、库存管理中的出库
 					param.flow_state="00";
@@ -328,21 +379,10 @@
 				}
 			}
 			function toAdd() {
-				
-				// 必输数据项校验控制
-				var valid = true;
-				$('*[id$="S"],*[id$="S_txt"]').each(function(index, element) {
-					if (!$(this).rules()) return;
-					if (!$(element).valid()) {
-						valid = false;
-						return;
-					}
-				});
-				if (!valid) return;
-				if (pGrid.rows.length === 0) {
-					$.ligerDialog.error('请添加入库商品。','错误');
+				pGrid.endEdit();
+				if (!validate())
 					return;
-				}
+				
 				
 				var param = {
 					origin:$("#originS").val(),
@@ -413,6 +453,7 @@
 						}
 						var ar = 0, br = 0;
 						if (addRows.length > 0) {
+							
 							var data_a = JSON.stringify(reqObj('ba','stock.add.stock_move',addRows));
 							ajaxSubmit("/cm/rbac/cm.do?m=ba", data_a, function(result) {
 								ar = result['status'];
@@ -519,21 +560,21 @@
 						<div class="label-div"><label>出库单号</label></div>
 						<div class="in-div"><input type="text" id="codeS" ltype="text" class="readonly diff" readonly="readonly" value="由系统自动生成" /></div>
 						<div class="label-div"><label>生产任务单号</label></div>
-						<div class="in-div"><input type="text" id="originS" ltype="text" class="diff" /></div>
+						<div class="in-div"><input type="text" id="originS" ltype="text" class="required diff" /></div>
 					</div>
                 	<div class="line-div">
 
 						<div class="label-div"> <label>出库日期</label></div>
-						<div class="in-div"><input type="text" id="predDateS" ltype="date" class="diff" /></div>
+						<div class="in-div"><input type="text" id="predDateS" ltype="date" class="required diff" /></div>
 					</div>
                 	<div class="line-div">
 						<div class="label-div"><label>出库仓库</label></div>
 						<div class="in-div">
-						<input type="text" id="warehouseInS" ltype="combobox" class="diff" />
+						<input type="text" id="warehouseInS" ltype="combobox" class="required diff" />
 						<input type="hidden" id="warehouseS" />
 						</div>
 						<div class="label-div"><label>发货人</label></div>
-						<div class="in-div"><input type="text" id="moveInS" ltype="combobox" class="diff" /></div>
+						<div class="in-div"><input type="text" id="moveInS" ltype="combobox" class="required diff" /></div>
 						<input type="hidden" id="moveInIdS" />
 					</div>
 					<div class="line-div" style="height:76px;">

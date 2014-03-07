@@ -49,7 +49,7 @@
 							
                         	return h; 
  						},frozen:true},
-                        {display:'单据状态',name:'state',width:70,minWidth:60,render:function(item){return paramRender(item,'stockBillSate',item.state);}},
+                        {display:'单据状态',name:'state',width:70,minWidth:60,render:function(item){return paramRender(item,'Deliver',item.state);}},
 	                   // {display:'单据类型',name:'move_type',width:90,minWidth:60,render:function(item){return paramRender(item,'stockBillType',item.move_type);}},
 	                    {display:'修改时间',name:'writedate',width:130},
 	                    {display:'出库单号',name:'code',width:80,minWidth:150},
@@ -73,6 +73,35 @@
                     clickToEdit:false,
                     onSelectRow:function(rowdata, rowindex){$("#txtrowindex").val(rowindex);},
                     onReload: toQuery,
+                    url: '../common/q.jsp', 
+                  //wws 2014-2-23 增加分页信息 start
+                    onToFirst: function(item) {
+                        toQuery(item, 1);
+                    },
+                    onToLast: function(item) {
+        				var p = parseInt(defGrid.options.total / defGrid.options.pageSize);
+        				if (defGrid.options.total % defGrid.options.pageSize > 0)
+        					p += 1;
+        				toQuery(item, p);
+                    },
+                    onToPrev: function(item) {
+        				var p = parseInt(defGrid.options.page);
+        				if (p > 1)
+        					p -= 1;
+        				else
+            				return;
+        				toQuery(item, p);
+                    },
+                    onToNext: function(item) {
+                    	var p = parseInt(defGrid.options.total / defGrid.options.pageSize);
+        				if (defGrid.options.total % defGrid.options.pageSize > 0)
+        					p += 1;
+    					var cp = parseInt(defGrid.options.page); 
+    					if (cp < p)
+        					cp += 1;
+        				toQuery(item, cp);
+                    },
+                    //wws 2014-2-23 增加分页信息 end 
                     param_movein:'user',
                     param_warehose:'base_point',
                     param_partner:'partner_list'
@@ -110,6 +139,16 @@
                 param.createuser=$('#createUserCodeS').val();
 				var data = JSON.stringify(reqObj('q','stock.select.picking_nomal.query',JSON.stringify(param),'l',true,page,pageSize));
 				ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
+					 //wws 2014-2-23 增加分页信息 start 
+					var d = data['data'].Rows;
+					var ps = defGrid.options.pageSize, p = defGrid.options.page, t = parseInt(data['data'].Total);
+					if (t > ps) {
+						for (var i = 0; i < (p - 1) * ps; i++) {
+							d.unshift(null);
+						}
+					}
+					defGrid.data = data['data'];
+					 //wws 2014-2-23 增加分页信息  end 
 					defGrid.set({data: data['data']});
 				});
 			}
@@ -174,6 +213,23 @@
 			upPickingDel(param1,'stock.update.picking_state.update','接收成功','接收失败');
 	
 		}
+		//修改 商品明细表中的 state='10'	
+		var stock_move_param=new Object();
+		alert(row.code);
+		stock_move_param.code=row.code;
+		stock_move_param.state='10';
+		 var stock_move_param_J = JSON.stringify(reqObj('u','stock.update.stock_move_state.update',JSON.stringify(stock_move_param)));
+					
+					ajaxSubmit("/cm/rbac/cm.do?m=u", stock_move_param_J, function(data) {
+						if (data) {
+							if (parseInt(data['status']) > 0) {
+								//$.ligerDialog.success('提交成功');
+								toQuery();
+							} else {
+								$.ligerDialog.error('提交失败');
+							}
+						}
+					});
 		// 审核确认
 		function toConfirm(rowid) {
 			var row = defGrid.getRow(rowid);

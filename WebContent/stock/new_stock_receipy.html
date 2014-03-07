@@ -24,28 +24,39 @@
 					$(this).removeClass("l-textarea");
 				});
 				$("#d-menu").ligerToolBar({items:[
-					{text:'保存',click:toAdd,icon:'save'},
-					{line:true},
-				    {text:'退回',icon:'save'},
-				    {line:true},
-				    {text:'确认收货',id:'quality',click:Quality,icon:'clear'},
-					{line:true}
+				              				    {text:'保存',id:'toSave',click:toSave,icon:'save'},
+				            				    {line:true},
+//				             				    {text:'出库单审核',id:'toConfirm',click:toConfirm,icon:'ok'},
+//				             				    {line:true},
+				            				    {text:'打印入库单',id:'',click:toPrint,icon:'print'},
+				            					{line:true},
+				            				    {text:'确认入库',id:'submitConfirm',click:submitConfirm,icon:'ok'},
+				            					{line:true},
+				            					{text:'驳回修改',id:'toDismiss',click:toDismiss,icon:'prev'},
+				            				    {line:true},
+				            				    {text:'返回',id:'toBack',click:toBack,icon:'back'},
+				            				    {line:true}
 				]});
                	pGrid = $("#p-div").ligerGrid({
                     columns:[
 						{display:'商品编号',name:'code',width:90,editor:{type:'popup',onButtonClick:selectProduct},textField:'code',valueField:'categ_id'},
 	                    {display:'品名',name:'name',width:150},
-			            {display:'规格/型号',name:'specs',width:150,render:function(item){return paramRender(item,'product_specs',item.code);}},
+	                    {display:'规格/型号',name:'specs',width:150},
+			            //{display:'规格/型号',name:'specs',width:150,render:function(item){return paramRender(item,'product_specs',item.code);}},
 			            {display:'单位',name:'product_uom',width:90,render:function(item){return paramRender(item,'uom',item.product_uom);},editor:{type:'select',data:getData('uom'),valueField:'value',textField:'name'}},
 			            {display:'品牌',name:'brand',width:60,render:function(item){return paramRender(item,'brand',item.brand);}
 			            ,editor:{type:'select',data:getData('Brand'),valueField:'value',textField:'name'}
 			            },
 			           // {display:'采购数量',name:'tar_product_qty',width:90,align:'right',editor:{type:'int'},render:function(item){return parseFloat(item.tar_product_qty).toFixed(0);}},
 			            {display:'收货数量',name:'product_qty',width:90,id:'num',align:'right',editor:{type:'int'},render:function(item){return parseFloat(item.product_qty).toFixed(0);}},
-			            {display:'质检方式',name:'qc_type',width:150,render:function(item){return paramRender(item,'methods',item.qc_type);}
-			            ,editor:{type:'select',data:getData('methods'),valueField:'value',textField:'name'}},
-			            {display:'质检结果',name:'qc_flag',width:150,render:function(item){return paramRender(item,'result',item.qc_flag);}
-			            ,editor:{type:'select',data:getData('result'),valueField:'value',textField:'name'}}
+// 			            {display:'质检方式',name:'qc_type',width:150,render:function(item){return paramRender(item,'methods',item.qc_type);}
+// 			            ,editor:{type:'select',data:getData('methods'),valueField:'value',textField:'name'}},
+// 			            {display:'质检结果',name:'qc_flag',width:150,render:function(item){return paramRender(item,'result',item.qc_flag);}
+// 			            ,editor:{type:'select',data:getData('result'),valueField:'value',textField:'name'}}
+			            {display:'质检方式',name:'qc_type',width:150,render:function(item){return paramRender(item,'QCType',item.qc_type);}
+			            },
+			            {display:'质检结果',name:'qc_flag',width:150,render:function(item){return paramRender(item,'QCResult',item.qc_flag);}
+			            }
                     ],
                     pageSize:20,
                     usePager: true,
@@ -127,11 +138,12 @@
 				curRow = this;
 				selDialog = $.ligerDialog.open({height:600,width:800,isResize: true,url:'../sysmgt/product_query.html?o=s',title:'选择商品'});
 			}
+			function queryProd(){}
 			function bindVal(data) {
 				if (data.Rows && data.Rows.length === 1) {
 					data = data.Rows[0];
-					$('#idS').val(data.id);
-					$('#stateS').val(data.state);
+					$('#id').val(data.id);
+					$('#state').val(data.state);
 					$('#codeS').val(data.code);
 					$('#originS').val(data.origin);
 					$('#partnerInS').val(paramRender(null,'partner_list',data.partner_id));
@@ -149,44 +161,14 @@
 					$('#createDateS').val(data.createdate);
 				}
 			}
-			function Quality(rowid) {
-				if($('#stateS').val()==100)
-			    {
-					$.ligerDialog.error('该单据未打印，不能确认出库，请确认！');
-					return;
-			    }
-				else if($('#stateS').val()==120){
-					$.ligerDialog.error('已提交收货，不能重复收货，请确认！');
-				}
-				else
-					{
-				   if(window.confirm('您确定要提交该项数据吗？')==true)
-			         
-					//var row = defGrid.getRow(rowid);
-					//$('#id').val(row.id);
-					//$('#state').val(20);
-					var param1=new Object();
-					param1.id=$('#idS').val();
-					param1.state='120';
-					param1.flow_state='50';
-					 var param = JSON.stringify(reqObj('u','stock.update.picking_state.update',JSON.stringify(param1)));
-					
-						ajaxSubmit("/cm/rbac/cm.do?m=u", param, function(data) {
-							if (data) {
-								if (parseInt(data['status']) > 0) {
-									$('#stateS').val(120);
-									$.ligerDialog.success('提交成功');
-									//$("#quality").hide();
-									//toQuery();
-								} else {
-									$.ligerDialog.error('提交失败');
-								}
-							}
-						});
-					}
-		        }
-			function queryProd() {}
-			function toAdd() {
+			
+		    function toBack()
+		    {
+		        //关闭 出库单维护界面
+		    	parent.tabManager.removeTabItem("receipy_stockp"); 
+			   
+			 }	
+			function toSave() {
 				if (pGrid.rows.length === 0) {
 					$.ligerDialog.error('请添加入库商品。','错误');
 					return;
@@ -231,6 +213,90 @@
 				} 
 				
 			}
+			// 驳回修改处理，即 退回到 制单环节
+			function toDismiss()
+			{
+				var param=new Object();
+				param.id=$('#id').val();
+				// 驳回后状态被修改
+				param.state="09";
+				param.flow_state="00";
+				upPickingDel(param,'stock.update.picking_state.update','驳回成功','驳回失败');
+				$('#state').val(50);
+			}
+
+			//确认入库
+			function submitConfirm() {
+			  			
+				if($('#state').val()=='70')
+					{
+					$.ligerDialog.error('已确认入库，不能重复确认，请确认！');
+				   return;
+					}
+				else if($('#flow_state').val()=='50')
+					{
+					$.ligerDialog.error('该单据未打印，不能确认入库，请确认！');
+					return;
+					}
+				else
+					{
+				   if(window.confirm('您确定要提交该项数据吗？')==true)
+    				var param=new Object();
+					param.id=$('#id').val();
+					//
+					param.state='70';
+					// 确认入库后流程为入库完成
+					param.flow_state='30';
+                
+					upPickingDel(param,'stock.update.picking_state.update','确认出库成功','确认出库失败');
+					//已提交 40
+					$('#state').val('70');
+					$('#flow_state').val('30');
+					}
+		        }
+			//打印处理
+			var printWin;
+			function toPrint(rowid) {	
+				
+				var printFlag =false
+				if(!$('#state').val() >='60'){
+					if(window.confirm('该单据已打印过，请确认是否需要第二次打印？')==true)
+				    printFlag=true;
+// 					$.ligerDialog.error('已打印请勿重复打印，不能打印，请确认！');
+// 					return;					
+				}else{
+					printFlag=true;
+				}
+				//alert(printFlag);
+				if(printFlag){
+					//printWin = $.ligerDialog.open({height:600,width:800,url:'./print_stock_pocket_picking.html?id='.concat(defGrid.getRow(rowid).code),title:'打印入库单'});
+					var param=new Object();
+					param.id=$('#id').val();
+					
+					param.state="60";
+					// 确认出库后流程为出库完成
+					param.flow_state=$('#flow_state').val();
+                
+					upPickingDel(param,'stock.update.picking_state.update','打印成功','打印失败');
+					//已提交 40
+				
+					$('#state').val('60');
+				}
+			}			
+			
+			function upPickingDel(param1,upSqlConID,successInfo,errorInfo){
+				 var param = JSON.stringify(reqObj('u',upSqlConID,JSON.stringify(param1)));
+					
+					ajaxSubmit("/cm/rbac/cm.do?m=u", param, function(data) {
+						if (data) {
+							if (parseInt(data['status']) > 0) {								
+								$.ligerDialog.success(successInfo);
+							} else {								
+								$.ligerDialog.error(errorInfo);
+							}
+						}
+					});
+			}
 	        function beginEdit(rowid) { 
 	        	pGrid.beginEdit(rowid);
 	        }
@@ -259,8 +325,9 @@
 		</style>
 	</head>
 	<body style="padding:0;">
-	<input  type="hidden" id="idS"/>
-	<input  type="hidden" id="stateS"/>
+	<input  type="hidden" id="id"/>
+	<input  type="hidden" id="state"/>
+	<input  type="hidden" id="flow_state"/>
 		<div id="pageloading"></div>  
 		<div id="layout_main">
 			<div position="center" id="a_center" title="基本信息" style="overflow:auto;">

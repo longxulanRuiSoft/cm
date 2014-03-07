@@ -39,22 +39,19 @@
                	pGrid = $("#p-div").ligerGrid({
                     columns:[
 						{display:'商品编号',name:'code',width:160,editor:{type:'popup',onButtonClick:selectProduct},textField:'code',valueField:'categ_id'},
-	                    {display:'品名',name:'name',width:160},
-			            {display:'规格/型号',name:'specs',width:160},
-			          //  {display:'待入库数量',name:'tar_product_qty',align:'right',editor:{type:'int'},render:function(item){return parseFloat(item.tar_product_qty).toFixed(0);}},
-			           {display:'单位',name:'product_uom',width:100,render:function(item){return paramRender(item,'uom',item.product_uom);}
-			           //,editor:{type:'select',data:getData('uom'),valueField:'value',textField:'name'}
-			           },
-			           {display:'品牌',name:'brand',width:60,render:function(item){return paramRender(item,'brand',item.brand);}
-			            ,editor:{type:'select',data:getData('Brand'),valueField:'value',textField:'name'}
-			            },
-			            {display:'发货数量',name:'product_qty',width:100,id:'num',align:'right',editor:{type:'int'},render:function(item){return parseFloat(item.product_qty).toFixed(0);}},
+						{display:'品名',name:'name',width:160},
+						{display:'规格/型号',name:'specs',width:160},
+						{display:'单位',name:'product_uom',width:100,render:function(item){return paramRender(item,'uom',item.product_uom);}},
+						{display:'品牌',name:'brand',width:60,render:function(item){return paramRender(item,'brand',item.brand);}
+						,editor:{type:'select',data:getData('Brand'),valueField:'value',textField:'name'}},
+						{display:'库存数量',name:'product_actual_qty',width:100,align:'right'},
+						{display:'已占用数量',name:'product_occupy_qty',width:100,align:'right'},
+						{display:'可用数量',name:'product_enable_qty',width:100,align:'right'},
+						{display:'发货数量',name:'product_qty',width:100,align:'right',editor:{type:'string'},render:function(item){return item.product_qty ? parseFloat(item.product_qty).toFixed(0) : '';}}
+// 			            {display:'发货数量',name:'product_qty',width:100,id:'num',align:'right',editor:{type:'int'},render:function(item){return parseFloat(item.product_qty).toFixed(0);}},
 			           
-			            //{display:'单价',name:'source_price_unit',align:'right',editor:{type:'float'},render:function(item){return parseFloat(item.source_price_unit).toFixed(2);}},
-			            //{display:'产成品单价',name:'price_unit',width:100,id:'price',align:'right',editor:{type:'float'},render:function(item){return parseFloat(item.price_unit).toFixed(2);}},
-			            //{display:'金额',name:'total',id:'total',width:100,align:'right',render:calcTotal}
                     ],
-                    pageSize:20,
+                    pageSize:10,
                     usePager: true,
                     width:'100%',
                     height:'100%',
@@ -67,6 +64,8 @@
                     clickToEdit:true,
                     onSelectRow:function(rowdata, rowindex){$("#txtrowindex").val(rowindex);},
                     onReload: queryProd,
+                    url: '../common/q.jsp', 
+                   
                     param_partner:'partner_list'
 				});
 				appendAddBtn(function(){
@@ -74,7 +73,7 @@
 					c_row = pGrid.getRow(pGrid.rows.length - 1);
 // 					$(".l-grid2 .l-grid-body-inner").attr("style", "");
 				}, "添加商品明细");
-				appendModifyBtn(function(){}, "修改商品明细");
+				//appendModifyBtn(function(){}, "修改商品明细");
 				appendDeleteBtn(deleteRow, "删除商品明细");
 
 				var str = window.location.toString().replace(/^[^?]+\??/, "");
@@ -174,6 +173,10 @@
 				            pGrid.updateCell('specs', data.specs, pGrid.getSelected());
 				            pGrid.updateCell('product_uom', data.uom_id, pGrid.getSelected());
 				            pGrid.updateCell('code', data.code, pGrid.getSelected());
+				            pGrid.updateCell('product_actual_qty', data.product_actual_qty, pGrid.getSelected());
+				            pGrid.updateCell('product_enable_qty', data.product_enable_qty, pGrid.getSelected());
+				            pGrid.updateCell('product_occupy_qty', data.product_occupy_qty, pGrid.getSelected());
+				   
 				            dialog.close();
 						}},
 					    {text:'取消',onclick: function(item, dialog){
@@ -207,14 +210,11 @@
 		    function toBack()
 		    {
 		    	//关闭修改界面
-		    	parent.tabManager.removeTabItem("modify_pocket");
+		    	parent.tabManager.removeTabItem("modify_nomal");
 		       	//关闭新增界面
-		    	parent.tabManager.removeTabItem("new_pocket");
+		    	parent.tabManager.removeTabItem("new_nomal");
 			 }
-		 // 保存业务处理
-			function toAdd() {
-				
-				// 必输数据项校验控制
+		    function validate() {
 				var valid = true;
 				$('*[id$="S"],*[id$="S_txt"]').each(function(index, element) {
 					if (!$(this).rules()) return;
@@ -223,11 +223,57 @@
 						return;
 					}
 				});
-				if (!valid) return;
+				if (!valid) return false;
+				
 				if (pGrid.rows.length === 0) {
 					$.ligerDialog.error('请添加入库商品。','错误');
-					return;
+					return false;
 				}
+				
+				var r, result;
+				var i = 0;
+				for (; i < pGrid.rows.length; i++) {
+					r = pGrid.rows[i];
+					if (!r.code) {
+						result = '商品编号不能为空';
+						break;
+					}
+					if (!r.product_qty || parseInt(r.product_qty) < 1) {
+						result = '出库数量必须录入大于0的整数';
+						break;
+					}
+					
+					if ( parseInt(r.product_qty) >parseInt(r.product_enable_qty) ) {
+						result = '发货数量不能大于可用数量';
+						break;
+					}
+				}
+
+				if (result) {
+					$.ligerDialog.error('入库商品列表第[' + (++i) + ']行存在错误<br/>原因：'.concat(result), '数据错误');
+					return false;
+				}
+				return true;
+			}
+		 // 保存业务处理
+			function toAdd() {
+				pGrid.endEdit();
+				if (!validate())
+					return;
+				// 必输数据项校验控制
+// 				var valid = true;
+// 				$('*[id$="S"],*[id$="S_txt"]').each(function(index, element) {
+// 					if (!$(this).rules()) return;
+// 					if (!$(element).valid()) {
+// 						valid = false;
+// 						return;
+// 					}
+// 				});
+// 				if (!valid) return;
+// 				if (pGrid.rows.length === 0) {
+// 					$.ligerDialog.error('请添加入库商品。','错误');
+// 					return;
+// 				}
 				
 				var param = {
 					origin:$("#originS").val(),
@@ -497,27 +543,27 @@
 						<div class="label-div"><label>出库单号</label></div>
 						<div class="in-div"><input type="text" id="codeS" ltype="text" class="readonly diff" readonly="readonly" value="由系统自动生成" /></div>
 						<div class="label-div"><label>销售任务单号</label></div>
-						<div class="in-div"><input type="text" id="originS" ltype="text" class="diff" /></div>
+						<div class="in-div"><input type="text" id="originS" ltype="text" class="required diff" /></div>
 					</div>
                 	<div class="line-div">
 						<div class="label-div"><label>客户</label></div>
 						<div class="in-div">
-						<input type="text" id="partnerInS" ltype="combobox" class="diff" />
+						<input type="text" id="partnerInS" ltype="combobox" class="required diff" />
 						<input type="hidden" id="partnerS" />
 						</div>
 						<div class="label-div"> <label>出库日期</label></div>
-						<div class="in-div"><input type="text" id="predDateS" ltype="date" class="diff" /></div>
+						<div class="in-div"><input type="text" id="predDateS" ltype="date" class="required diff" /></div>
 					</div>
                 	<div class="line-div">
 						<div class="label-div"><label>出库仓库</label></div>
 						<div class="in-div">
 						<!--  <input type="text" id="warehouseS" ltype="text" class="diff" />
 						-->
-						<input type="text" id="warehouseInS" ltype="combobox" class="diff" />
+						<input type="text" id="warehouseInS" ltype="combobox" class="required diff" />
 						<input type="hidden" id="warehouseS" />
 						</div>
 						<div class="label-div"><label>发货人</label></div>
-						<div class="in-div"><input type="text" id="moveInS" ltype="combobox" class="diff" /></div>
+						<div class="in-div"><input type="text" id="moveInS" ltype="combobox" class="required diff" /></div>
 						<input type="hidden" id="moveInIdS" />
 					</div>
 					<div class="line-div" style="height:76px;">
