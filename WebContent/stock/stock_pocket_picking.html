@@ -48,7 +48,7 @@
                            	return h; 
  						},frozen:true
  						},
-                        {display:'单据状态',name:'state',width:70,minWidth:60,render:function(item){return paramRender(item,'proOutStockState',item.state);}},
+                        {display:'单据状态',name:'state',width:70,minWidth:60,render:function(item){return paramRender(item,'',item.state);}},
                         //{display:'单据类型',name:'move_type',width:90,minWidth:60,render:function(item){return paramRender(item,'stockBillType',item.move_type);}},
                         {display:'修改时间',name:'writedate',width:130},
   	                    {display:'出库单号',name:'code',width:130,minWidth:60},
@@ -190,27 +190,6 @@
 			function toPrint(rowid) {
 				printWin = $.ligerDialog.open({height:600,width:800,url:'./print_stock_pocket_picking.html?id='.concat(defGrid.getRow(rowid).code),title:'打印入库单'});
 			}
-			
-			
-			//修改 商品明细表中的 state='10'	
-			var stock_move_param=new Object();
-			alert(row.code);
-			stock_move_param.code=row.code;
-			stock_move_param.state='10';
-			 var stock_move_param_J = JSON.stringify(reqObj('u','stock.update.stock_move_state.update',JSON.stringify(stock_move_param)));
-						
-						ajaxSubmit("/cm/rbac/cm.do?m=u", stock_move_param_J, function(data) {
-							if (data) {
-								if (parseInt(data['status']) > 0) {
-									//$.ligerDialog.success('提交成功');
-									toQuery();
-								} else {
-									$.ligerDialog.error('提交失败');
-								}
-							}
-						});
- 				}
-	        }
 			// 审核确认
 			function toConfirm(rowid) {
 				var row = defGrid.getRow(rowid);
@@ -237,7 +216,7 @@
 				param1.state='20';
 				param1.flow_state='20';
 				upPickingDel(param1,'提交出库成功','提交出库失败');
-				
+
 				
 			}
 			
@@ -330,7 +309,7 @@
 					<label>生产任务单号</label><input type="text" class="s-text-qCond txt-def" id="originQ" />
 					<!-- <label>供应商</label><input type="text" class="s-text txt-def" id="partnerQ" />
 					 -->
-					 <label>单据状态</label><select id="stateQ" param="maInstockstate" first="" ></select>
+					 <label>单据状态</label><select id="stateQ" param="Deliver" first="" ></select>
 					<input type="button" value="查询" style="margin-left:25px;" onclick="toQuery();" />
 					<input type="button" value="清空" onclick="toReset('#codeQ,#originQ,#partnerQ');" />
 				</div>
