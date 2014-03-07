@@ -205,7 +205,6 @@
 				param.state="09";
 				param.flow_state="00";
 				upPickingDel(param,'stock.update.picking_state.update','驳回成功','驳回失败');
-				$('#state').val(50);
 			}
 
 			//确认出库
@@ -216,6 +215,10 @@
 					$.ligerDialog.error('已确认出库，不能重复确认，请确认！');
 				   return;
 					}
+				if ($("#state").val()=='09') {
+					$.ligerDialog.error('已驳回修改，不能确认出库，请确认！');
+					return;
+				}
 				else if($('#flow_state').val()=='50')
 					{
 					$.ligerDialog.error('该单据未打印，不能确认出库，请确认！');
@@ -235,6 +238,24 @@
 					//已提交 40
 					$('#state').val('70');
 					$('#flow_state').val('30');
+					//修改 商品明细表中的 state='10'
+					
+					var stock_move_param=new Object();
+// 					alert(row.code);
+					stock_move_param.code=row.code;
+					stock_move_param.state='20';
+					 var stock_move_param_J = JSON.stringify(reqObj('u','stock.update.stock_move_state.update',JSON.stringify(stock_move_param)));
+								
+								ajaxSubmit("/cm/rbac/cm.do?m=u", stock_move_param_J, function(data) {
+									if (data) {
+										if (parseInt(data['status']) > 0) {
+											//$.ligerDialog.success('提交成功');
+											toQuery();
+										} else {
+											$.ligerDialog.error('提交失败');
+										}
+									}
+								});
 					}
 		        }
 			//打印处理

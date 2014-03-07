@@ -29,6 +29,12 @@
 				var data = JSON.stringify(reqObj('q','stock.select.picking.query',JSON.stringify({code:codeQ})));
 				ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
 					var picking = data.data.Rows[0];
+// 					if (picking.recpt_in_date === undefined) {
+// 						$.ligerDialog.error('入库单[' + codeQ + ']尚未完成入库操作，无法进行打印。','无法打印',function(){
+// 							parent.printWin.close();
+// 						});
+// 						return;
+// 					}
 					
 					$("#partnerS").text(picking.partner_id);
 					$("#moveInDateS").text(picking.recpt_in_date);

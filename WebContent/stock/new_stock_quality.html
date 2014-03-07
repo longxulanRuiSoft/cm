@@ -3,7 +3,6 @@
 	<head>
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 		<title>质检单维护</title>
-		
 		<link rel="stylesheet" type="text/css" href="../css/cm-default.css"  />
 		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/Aqua/css/ligerui-all.css" />
 		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/ligerui-icons.css" />
@@ -47,7 +46,7 @@
 			            },
 			            {display:'品牌',name:'brand',width:60},
 			            {display:'采购数量',name:'tar_product_qty',width:90,align:'right',render:function(item){return parseFloat(item.tar_product_qty).toFixed(0);}},
-			            {display:'收货数量',name:'product_qty',width:90,id:'num',align:'right'},
+			            {display:'收货数量',name:'product_qty',width:90,id:'num',align:'right',render:function(item){return parseFloat(item.tar_product_qty).toFixed(2);}},
 			            {display:'质检方式',name:'qc_type',width:150,render:function(item){return paramRender(item,'QCType',item.qc_type);}
 			            ,editor:{type:'select',data:getData('QCType'),valueField:'value',textField:'name'}},
 			            {display:'质检结果',name:'qc_flag',width:150,render:function(item){return paramRender(item,'QCResult',item.qc_flag);}
@@ -330,9 +329,15 @@
 			// 驳回修改处理，即 退回到 制单环节
 			function toDismiss()
 			{
+				if($('#stateS').val()>=30){
+					$.ligerDialog.error('已确认质检 ，不能驳回修改，请确认！');
+					return;
+				}
+					
 				var param=new Object();
 				param.id=$('#idS').val();
 				// 驳回后状态被修改
+						
 				param.state="09";
 				param.flow_state="00";
 				upPickingDel(param,'stock.update.picking_state.update','驳回成功','驳回失败');
@@ -340,8 +345,14 @@
 			}
 			//质检确认
 			function Quality() {
-				if($('#stateS').val()>=30)
+				if($('#stateS').val()>=30){
 					$.ligerDialog.error('已确认质检，不能重复确认，请确认！');
+					return;
+				}
+				if ($("#stateS").val()=='09') {
+					$.ligerDialog.error('已驳回修改，不能确认质检，请确认！');
+					return;
+				}	
 				else
 					
 				   if(window.confirm('请确认物品已全部质检完成，您确定要提交该项数据吗？')==true)
