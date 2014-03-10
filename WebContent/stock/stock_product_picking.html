@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-		<title>产成品入库单</title>
+		<title>产成品入库制单管理</title>
 		
 		<link rel="stylesheet" type="text/css" href="../css/cm-default.css"  />
 		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/Aqua/css/ligerui-all.css" />
@@ -17,91 +17,95 @@
                	defGrid = $("#query_list").ligerGrid({
                     columns:[
  						{display:'操作',isSort:false,width:150,render:function(rowdata,rowindex,value) {
- 							var h = "";
-							  //h +="<a href='javascript:void(0);' class='opt-link' onclick='toPrint(" + rowindex + ")'>打印</a> "; 
-							  
-							 var row = defGrid.getRow(rowindex);
-								// 单据状态 state    入库制单  00 新建  10 未审核 20 已审核 30 未提交 40已提交      50 已驳回
-								//               质检  60 未审核   70 已审核  80 质检未完成 90 质检完成 100 提交入库 
-								//               入库  110 打印入库单    120 确认入库   130 入库完成
-								// 流程状态 flow_state 00 新建（制单） 10 入库质检     20 入、出库审核   30 打印出入库单   40 入、出库确认    50 入、出库完成 
-								  if(row.state >='20' ) 
-								  	{
-									  h += "已审核  ";
-								  	}
-								  else 
-									{
-									  h += "<a href='javascript:void(0);' id='submitToPick' class='opt-link' onclick='toConfirm(" + rowindex + ")'>审核</a> ";
-									}
+ 							
+ 							var h = ""; 
+							var row = defGrid.getRow(rowindex);
+
+
+							// 制单环节：单据状态  state      00 未审核     >>审核 >>    10 已审核     >>提交>>     20已提交                 09 驳回修改
+							// 质检环节：                                               20 待质检    >>质检确认>>  30已质检     >>审核>>      40已审核  >>提交>>  50已提交
+							// 出入库确认环节                                       50待打印     >>打印>>     60已打印   >>出入库确认>>   70出库完成           
+														
+							// 流程状态 flow_state 00 新建（制单） 10 入库质检     20入、出库确认    30 入、出库完成
+							if(row.state >=10 ) 
+							  	{
+								  h += "已审核  ";
+							  	}
+							  else 
+								{
+								  h += "<a href='javascript:void(0);' id='submitToPick' class='opt-link' onclick='toConfirm(" + rowindex + ")'>审核</a> ";
+								}
+							
+							 if(row.state < 20)
+							  {
 								
-								 if(row.state<='20' && row.flow_state<'10')
-								  {
-									
-									 h += "<a href='javascript:void(0);' id='to_quality' class='opt-link' onclick='to_quality(" + rowindex + ")'>提交质检</a> ";
-								  }
-								 else{
-									 h += "已提交质检 ";
-								 }
-                        	return h; 
- 						},frozen:true},
-                        {display:'单据状态',name:'state',width:90,minWidth:60,render:function(item){return paramRender(item,'stockBillSate',item.state);}},
-                        {display:'修改时间',name:'writedate',width:150},
+								 h += "<a href='javascript:void(0);' id='to_quality' class='opt-link' onclick='to_quality(" + rowindex + ")'>提交质检</a> ";
+							  }
+							 else{
+								 h += "已提交质检 ";
+							 }
+                      	return h; 
+                        },frozen:true},
+                        {display:'单据状态',name:'state',width:90,minWidth:60,render:function(item){return paramRender(item,'maInStockState',item.state);}},
                         //{display:'单据类型',name:'move_type',width:90,minWidth:60,render:function(item){return paramRender(item,'stockBillType',item.move_type);}},
-	                    {display:'入库单号',name:'code',width:130,minWidth:60},
+                        {display:'修改时间',name:'writedate',width:130},
+                        {display:'入库单号',name:'code',width:130,minWidth:60},
 	                    {display:'产品任务单号',name:'origin',width:130},
-			           // {display:'入库日期',name:'pred_date',width:100},
-			            {display:'入库仓库',name:'warehose_id',render:sw_warehose,width:90,align:'left'},
-			            {display:'收货人',name:'move_in_user',width:80,render:sw_opt,align:'left'},
-			            {display:'备注',width:250,name:'note'}
-                    ],
-                    pageSize:20,
-                    usePager: true,
-                    width:'100%',
-                    height:'99%',
-                    dataAction:'server',
-                    checkbox:false,
-                    rownumbers:false,
-                    fixedCellHeight:false,
-                    colDraggable:true,
-                    enabledEdit:true,
-                    clickToEdit:false,
-                    onSelectRow:function(rowdata, rowindex){$("#txtrowindex").val(rowindex);},
-                    onReload: toQuery,
-                    url: '../common/q.jsp',                   
-                    //wws 2014-2-23 增加分页信息 start
-                    onToFirst: function(item) {
-                        toQuery(item, 1);
-                    },
-                    onToLast: function(item) {
-        				var p = parseInt(defGrid.options.total / defGrid.options.pageSize);
-        				if (defGrid.options.total % defGrid.options.pageSize > 0)
-        					p += 1;
-        				toQuery(item, p);
-                    },
-                    onToPrev: function(item) {
-        				var p = parseInt(defGrid.options.page);
-        				if (p > 1)
-        					p -= 1;
-        				else
-            				return;
-        				toQuery(item, p);
-                    },
-                    onToNext: function(item) {
-                    	var p = parseInt(defGrid.options.total / defGrid.options.pageSize);
-        				if (defGrid.options.total % defGrid.options.pageSize > 0)
-        					p += 1;
-    					var cp = parseInt(defGrid.options.page); 
-    					if (cp < p)
-        					cp += 1;
-        				toQuery(item, cp);
-                    },
-                    //wws 2014-2-23 增加分页信息 end 
-                    param_movein:'user',
-                    param_warehose:'base_point'
-				});
-				appendAddBtn(openDictDef, "添加入库单");
-				appendModifyBtn(openModify, "修改产品入库单");
+// 			            {display:'供应商',name:'partner_id',render:sw_partner,width:190,align:'left'},
+// 			            {display:'预计到货日期',name:'pred_date',width:80},
+			            {display:'入库仓库',name:'warehose_id',render:sw_warehose,width:80},
+			            {display:'收货人',name:'move_in_user',render:sw_opt,width:80},
+			            {display:'入库异常',name:'qc_anomaly_sate',width:80,render:function(item){return paramRender(item,'QCAnomalySate',item.move_type);}},
+			            {display:'质检结论',name:'qc_note',width:100},
+			            {display:'备注',width:200,name:'note',align:'left'}
+	                    ],
+	                    pageSize:20,
+	                    usePager: true,
+	                    dataAction:'server',
+	                    url: '../common/q.jsp',
+	                    width:'100%',
+	                    height:'99%',
+	                    checkbox:false,
+	                    rownumbers:false,
+	                    fixedCellHeight:false,
+	                    colDraggable:true,
+	                    enabledEdit:false,
+	                    clickToEdit:false,
+	                    onSelectRow:function(rowdata, rowindex){$("#txtrowindex").val(rowindex);},
+	                    onReload: toQuery,
+	                    onToFirst: function(item) {
+	                        toQuery(item, 1);
+	                    },
+	                    onToLast: function(item) {
+	        				var p = parseInt(defGrid.options.total / defGrid.options.pageSize);
+	        				if (defGrid.options.total % defGrid.options.pageSize > 0)
+	        					p += 1;
+	        				toQuery(item, p);
+	                    },
+	                    onToPrev: function(item) {
+	        				var p = parseInt(defGrid.options.page);
+	        				if (p > 1)
+	        					p -= 1;
+	        				else
+	            				return;
+	        				toQuery(item, p);
+	                    },
+	                    onToNext: function(item) {
+	                    	var p = parseInt(defGrid.options.total / defGrid.options.pageSize);
+	        				if (defGrid.options.total % defGrid.options.pageSize > 0)
+	        					p += 1;
+	    					var cp = parseInt(defGrid.options.page); 
+	    					if (cp < p)
+	        					cp += 1;
+	        				toQuery(item, cp);
+	                    },
+	                    param_movein:'user',
+	                    param_warehose:'base_point'
+					});
+				appendAddBtn(openDictDef, "添加产成品入库单");
+				appendModifyBtn(openModify, "编辑产成品入库单");
 				appendDeleteBtn(deleteRow, "删除单据信息");
+				appendSearchBtn(searchRow, "查看单据信息");
 				$("#pageloading").hide();
 				ajaxSubmit("/cm/rbac/cmUser.do?method=getUserInfo", null, function(data) {
 					$('#createUserCodeS').val(data['uid']);
@@ -109,6 +113,19 @@
 				//默认查询全部数据 
 				toQuery();
 			});
+			
+			//通用单据查询 界面
+			function searchRow(){
+				var row = defGrid.getSelectedRow();
+
+				if (!row) {
+					$.ligerDialog.error('请先选择要查看的单据！','错误');
+					return;
+				}
+				
+				parent.f_addTab('new_search_stockS','单据明细信息','./stock/search_stock_picking.html?o=m&code='.concat(row.code));
+			}
+
 			function sw_opt(item) {
 				var swd = paramRender(item, defGrid.options.param_movein, item.move_in_user);
 				if (!swd)
@@ -148,86 +165,76 @@
 					defGrid.set({data: data['data']});
 				});
 			}
-			function openModify() {
-				var row = defGrid.getSelectedRow();
-				if(row.state >=20)
-			    {
-					$.ligerDialog.error('该单据不能编辑！');
-				    return;
-				}
-				if (!row) {
-					$.ligerDialog.error('请先选择需要编辑的产成品入库单。','错误');
-					return;
-				}
-				
-				parent.f_addTab('modify_product','产成品入库单维护','./stock/new_stock_product_picking.html?o=m&code='.concat(row.code));
-			}
+			//新增
 			function openDictDef() {
 				parent.f_addTab('new_productd','新增产成品入库单','./stock/new_stock_product_picking.html');
 			}
-			function toModify(row) {
-				var url = "/cm/rbac/cmDict.do?m=u";
-				ajaxSubmit(url, row, function(data) {
-					if (data) {
-						if (parseInt(data['result']) > 0) {
-							$.ligerDialog.success('保存成功');
-						} else {
-							$.ligerDialog.error('保存失败');
-						}
-					}
-				});
-			}
-			var printWin;
-			function toPrint(rowid) {
-				printWin = $.ligerDialog.open({height:600,width:800,url:'./print_stock_product_picking.html?id='.concat(defGrid.getRow(rowid).code),title:'打印入库单'});
-			}
-			function to_quality(rowid) {
-				var row = defGrid.getRow(rowid);
-				//alert(row.state);
- 				if(row.state < '20')
+			//编辑
+			function openModify() {
+				var row = defGrid.getSelectedRow();
+				if (!row) {
+					$.ligerDialog.error('请先选择要编辑的产成品入库单记录。','错误');
+					return;
+				}
+				if(row.state >= 10 )
 			    {
-					
-					$.ligerDialog.error('该单据未审核，请先审核！');
+					$.ligerDialog.error('该单据已审核或已提交，不能编辑！');
 				    return;
 				}
-				else{
-			   if(window.confirm('您确定要提交该项数据吗？')==true)
-
-				//$('#id').val();
-				//提交质检，待质检状态 -11-
-				//$('#state').val(11);
-				var param1=new Object();
-				param1.id=row.id;
-				param1.state='40';
-				param1.flow_state='10';
-				
-				 var param = JSON.stringify(reqObj('u','stock.update.picking_state.update',JSON.stringify(param1)));
-				
-					ajaxSubmit("/cm/rbac/cm.do?m=u", param, function(data) {
-						if (data) {
-							if (parseInt(data['status']) > 0) {
-								$.ligerDialog.success('提交成功');
-								//$("#to_quality").hide();
-								toQuery();
-							} else {
-								$.ligerDialog.error('提交失败');
-							}
-						}
-					});
- 				}
-	        }
+				parent.f_addTab('modify_product','产成品入库单维护','./stock/new_stock_product_picking.html?o=m&code='.concat(row.code));
+			}
+			
 			// 审核确认
 			function toConfirm(rowid) {
 				var row = defGrid.getRow(rowid);
 				var param1=new Object();
 			     	param1.id=row.id;
 					//已审核 20
-					param1.state="20";
+					param1.state="10";
                     param1.flow_state=row.flow_state;
                     
 					upPickingDel(param1,'审核成功','审核失败');
 			
-		        }
+		     }
+			//提交质检
+			function to_quality(rowid) {
+				var row = defGrid.getRow(rowid);
+
+				if(row.state < 10)
+			    {					
+					$.ligerDialog.error('该单据未审核，请先审核！');
+				    return;
+				}
+				
+ 				$.ligerDialog.confirm('您确定要提交该项数据吗？', function(r) {
+ 					
+		            if (!r)
+			            return;
+		            
+					//修改 商品明细表中的 state='10'	
+					var stock_move_param=new Object();
+					stock_move_param.code=row.code;
+					stock_move_param.state='10';
+					 var stock_move_param_J = JSON.stringify(reqObj('u','stock.update.stock_move_state.update',JSON.stringify(stock_move_param)));
+								
+								ajaxSubmit("/cm/rbac/cm.do?m=u", stock_move_param_J, function(data1) {
+									if (data1) {
+										if (parseInt(data1['status']) > 0) {
+											//修改单据的 state ='20'
+											var param1=new Object();
+											param1.id=row.id;
+											// 状态被修改
+											param1.state='20';
+											param1.flow_state='10';
+											upPickingDel(param1,'提交质检成功','提交质检失败');
+										} else {
+											$.ligerDialog.error('提交失败');
+										}
+									}
+								});
+ 				});						
+			}
+			
 			function upPickingDel(param1,successInfo,errorInfo){
 				
 				 var param = JSON.stringify(reqObj('u','stock.update.picking_state.update',JSON.stringify(param1)));
@@ -247,57 +254,34 @@
 				
 				
 			}
-			//提交仓库收货
-			function submitToPick(rowid) {
-				var row = defGrid.getRow(rowid);
-				if(row.state < '20')
-			    {
-					
-					$.ligerDialog.error('该单据未审核，请先审核！');
-				    return;
-				}
-				else{
-			   if(window.confirm('您确定要提交该项数据吗？')==true)
 
-				var param1=new Object();
-				param1.id=row.id;
-				param1.state='40';
-				param1.flow_state='10';
-				
-				 var param = JSON.stringify(reqObj('u','stock.update.picking_state.update',JSON.stringify(param1)));
-				
-					ajaxSubmit("/cm/rbac/cm.do?m=u", param, function(data) {
-						if (data) {
-							if (parseInt(data['status']) > 0) {
-								$.ligerDialog.success('提交成功');
-								//$("#submitToPick").hide();
-								toQuery();
-							} else {
-								$.ligerDialog.error('提交失败');
-							}
-						}
-					});
-				}
-	        }
+
+			/*	
+				删除处理 
+			*/
 			 function deleteRow(rowid) {
-				    var row = defGrid.getSelectedRow(rowid);
-					if(row.state >=20)
-				    {
-						$.ligerDialog.error('该单据不能删除！');
-					    return;
+				 
+				 var row = defGrid.getSelectedRow();
+				if (!row) {
+						$.ligerDialog.error('请先选择要删除的原材料入库单记录。','错误');
+						return;
 					}
-					else
-						{
+				 if(row.state >= 10 )
+					{
+					 $.ligerDialog.error('该单据已审核或已提交，不能删除！');
+						return;
+					}
+				  
 		            $.ligerDialog.confirm('您确定要删除该项数据吗？', function(r) {
 			            if (!r)
 				            return;
-		            
+		                
 		                if (row['__status'] !== 'add')
 		                	toDel(JSON.stringify(row));
 		                defGrid.deleteRow(rowid);
 		            })
-					}
 		        }
+			// 删除处理业务处理
 			 function toDel(row) {
 				
 				 var param = JSON.stringify(reqObj('d','stock.delete.stock_move.prckingid',row));
@@ -308,6 +292,7 @@
 						     var param = JSON.stringify(reqObj('d','stock.delete.stock_picking.code',row));
 						      ajaxSubmit("/cm/rbac/cm.do?m=d", param, function(data) {
 								if (parseInt(data['status']) > 0) {
+									toQuery();
 								  $.ligerDialog.success('删除成功');
 								}
 								else{
@@ -319,7 +304,7 @@
 							}
 						}
 					});
-			}
+			}			
 	    </script>
 		<style type="text/css">
 			label{margin: 5px 20px 5px 15px;}
@@ -344,7 +329,7 @@
 					<label>产品任务单号</label><input type="text" class="s-text txt-def" id="originQ" />
 					<!-- <label>供应商</label><input type="text" class="s-text txt-def" id="partnerQ" />
 					 -->
-					 <label>单据状态</label><select id="stateS" param="Finished" first="" ></select>
+					 <label>单据状态</label><select id="stateS" param="maInStockState" first="" ></select>
 					<input type="button" value="查询" style="margin-left:25px;" onclick="toQuery();" />
 					<input type="button" value="清空" onclick="toReset('#codeQ,#originQ,#partnerQ');" />
 				</div>

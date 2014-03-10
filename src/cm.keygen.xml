@@ -12,14 +12,14 @@
 			<map>
 				<entry key="stock.picking.code">
 					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
-						<property name="rule" value="'KC'{date}{seq(2)}" />
+						<property name="rule" value="'KC'{date}{seq(4)}" />
 						<property name="circle" value="year" />
 						<property name="group" value="true" />
 					</bean>
 				</entry>
 				<entry key="stock.picking.out.code">
 					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
-						<property name="rule" value="'CK'{date}{seq(2)}" />
+						<property name="rule" value="'CK'{date}{seq(4)}" />
 						<property name="circle" value="year" />
 						<property name="group" value="true" />
 					</bean>
@@ -27,7 +27,15 @@
 				<!-- 原材料入库单编号规则 -->			
 				<entry key="stock.picking.ycl.rk.code">
 					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
-						<property name="rule" value="'YCLRK'{date}{seq(2)}" />
+						<property name="rule" value="'YCLRK'{date}{seq(4)}" />
+						<property name="circle" value="year" />
+						<property name="group" value="true" />
+					</bean>
+				</entry>
+				<!-- 产成品入库单编号规则 -->			
+				<entry key="stock.picking.ccp.rk.code">
+					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
+						<property name="rule" value="'CCPRK'{date}{seq(4)}" />
 						<property name="circle" value="year" />
 						<property name="group" value="true" />
 					</bean>
@@ -35,7 +43,15 @@
 				<!-- 生产领用出库单编号规则 -->
 				<entry key="stock.picking.ly.ck.code">
 					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
-						<property name="rule" value="'SCCK'{date}{seq(2)}" />
+						<property name="rule" value="'SCCK'{date}{seq(4)}" />
+						<property name="circle" value="year" />
+						<property name="group" value="true" />
+					</bean>
+				</entry>
+				<!-- 销售发货出库单编号规则 -->			
+				<entry key="stock.picking.xsfh.ck.code">
+					<bean class="com.ruisoft.cm.rbac.entity.KeyEntity">
+						<property name="rule" value="'XSCK'{date}{seq(4)}" />
 						<property name="circle" value="year" />
 						<property name="group" value="true" />
 					</bean>

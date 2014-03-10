@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-		<title>收货</title>
+		<title>入库确认管理</title>
 		
 		<link rel="stylesheet" type="text/css" href="../css/cm-default.css"  />
 		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/Aqua/css/ligerui-all.css" />
@@ -22,31 +22,38 @@
  						{display:'操作',isSort:false,width:120,render:function(rowdata,rowindex,value) {
  							var h = "";
 							
-							// 制单环节：单据状态  state      00 未审核     >>审核 >>    10 已审核     >>提交>>     20已提交                 99 驳回修改
+							// 制单环节：单据状态  state      00 未审核     >>审核 >>    10 已审核     >>提交>>     20已提交                 09 驳回修改
 							// 质检环节：                                               20 待质检    >>质检确认>>  30已质检     >>审核>>      40已审核  >>提交>>  50已提交
 							// 出入库确认环节                                       50待打印     >>打印>>     60已打印   >>出入库确认>>   70出库完成           
 							
 							// 流程状态 flow_state 00 新建（制单） 10 入库质检     20入、出库确认    30 入、出库完成
 							
 						var row = defGrid.getRow(rowindex);
- 						   if(row.state <= 50)
- 							{
- 							  h += "<a href='javascript:void(0);' class='opt-link' onclick='toPrint(" + rowindex + ")'>打印</a> ";
- 							}
- 						   else
- 						   {
- 							  h += "打印完成  ";
- 						   }
- 						if(row.state < 70 )
- 						   {
- 							  h += "待确认入库";
- 						   }
- 							 else
- 							{
-                               
-                               h += "已确认入库";
- 							}
-                        	return h; 
+						//alert(row.state);
+						//打印出库单
+//						  if(row.state  <= 50 ){							
+//								h += "<a href='javascript:void(0);' class='opt-link' onclick='toPrint(" + rowindex + ")'>打印</a> ";
+//						  	}
+//						
+						h += "<a href='javascript:void(0);' class='opt-link' onclick='toPrint(" + rowindex + ")'>打印</a> ";
+						if(row.state == '50')
+							h += "待打印  "; 
+						if(row.state > 50)
+							h += "已打印  ";
+						//待确认出库 ，在里面进行 确认出库 
+						 if(row.state <= 60 )
+                          h += "待确认入库 ";
+						
+						 if(row.state >= 70) 
+						  	{  								
+							h += "入库完成  ";
+						  	}
+						 //驳回
+ 						 if(row.state  == '09') 
+							{
+								h = "已驳回修改 ";
+							}
+                   	 	return h;
                         	
                         },frozen:true},
                         {display:'单据状态',name:'state',width:80,minWidth:60,render:function(item){return paramRender(item,'inStockState',item.state);}},
@@ -54,12 +61,11 @@
                         {display:'修改时间',name:'writedate',width:130},
                         {display:'入库单号',name:'code',width:130,minWidth:60},
 	                    {display:'采购申请单号',name:'origin',width:130},
-	                 
 			            {display:'供应商',name:'partner_id',width:190,render:sw_partner,align:'left'},
 			            //{display:'预计到货日期',name:'pred_date',width:80},
 			            {display:'入库仓库',name:'warehose_id',render:sw_warehose,width:90,align:'left'},
 			            {display:'收货人',name:'move_in_user',width:90,render:sw_opt,align:'left'},
-			            {display:'备注',name:'note',width:210,align:'left'}
+			            {display:'备注',name:'note',width:150,align:'left'}
                     ],
                     pageSize:20,
                     usePager: true,
@@ -110,13 +116,28 @@
 				});
 				//appendAddBtn(openDictDef, "添加入库单");
 				appendModifyBtn(openModify, "修改入库单");
+				appendSearchBtn(searchRow, "查看单据信息");
 				$("#pageloading").hide();
-				//默认查询全部数据 
-				toQuery();
+
 				ajaxSubmit("/cm/rbac/cmUser.do?method=getUserInfo", null, function(data) {
 					$('#UserCodeS').val(data['uid']);
 				}, null, false);
+				
+				//默认查询全部数据 
+				toQuery();
 			});
+			
+			//通用单据查询 界面
+			function searchRow(){
+				var row = defGrid.getSelectedRow();
+
+				if (!row) {
+					$.ligerDialog.error('请先选择要查看的单据！','错误');
+					return;
+				}
+				
+				parent.f_addTab('new_search_stockS','单据明细信息','./stock/search_stock_picking.html?o=m&code='.concat(row.code));
+			}
 			
 			function sw_opt(item) {
 				var swd = paramRender(item, defGrid.options.param_movein, item.move_in_user);
@@ -152,11 +173,12 @@
 				//01 resale采购入库  02 sale产成品入库	
 				
 				if(opt=='resale'){
-					param.move_type='01';
+					// 原材料入库
+					param.move_type='01';				
+					
 				}else{
 					param.move_type='02';
-				}
-				
+				}				
 				param.move_in_user=$('#UserCodeS').val();
 				  //处理flow_state大于20的数据
                 param.flow_state='20';
@@ -186,47 +208,43 @@
 					$.ligerDialog.error('请先选择入库单记录。','错误');
 					return;
 				}
-				parent.f_addTab('receipy_stockp','收货维护','./stock/new_stock_receipy.html?o=m&code='.concat(row.code));
+				parent.f_addTab('receipy_stockp','入库单维护','./stock/new_stock_receipy.html?o=m&code='.concat(row.code));
 			}
+			
 			var printWin;
+			var printFormatUrl='';
 			function toPrint(rowid) {
-				
 				var row = defGrid.getRow(rowid);
-				
-				
-			//	alert(row.state);
 				var printFlag =false
 				if(row.state >= 60){
-					if(window.confirm('该单据已打印过，请确认是否需要第二次打印？')==true)
+					if(window.confirm('该单据已打印过，请确认是否需要再次打印？')==true)
 				    printFlag=true;
-// 						
 				}else{
 					printFlag=true;
 				}
 				
 				if(printFlag){
+					 
+					if(opt=='resale'){
+						// 原材料采购入库
+						printFormatUrl='./print_purchase_inStock.html?id=';
+					} else if(opt=='sale'){
+						//产成品入库
+						printFormatUrl='./print_pro_inStock.html?id=';
+					}else{
+						//原材料退库
+						printFormatUrl='./print_rawMat_back_inStock.html?id=';
+					}
 					
-					printWin = $.ligerDialog.open({height:600,width:800,url:'./print_stock_picking.html?id='.concat(defGrid.getRow(rowid).code),title:'打印入库单'});
-					
-// 					VAR PARAM1=NEW OBJECT();
-// 					PARAM1.ID=ROW.ID;
-// 					PARAM1.STATE='110';
-// 					PARAM1.FLOW_STATE=ROW.FLOW_STATE;
-// 					 VAR PARAM = JSON.STRINGIFY(REQOBJ('U','STOCK.UPDATE.PICKING_STATE.UPDATE',JSON.STRINGIFY(PARAM1)));
-					
-// 						AJAXSUBMIT("/CM/RBAC/CM.DO?M=U", PARAM, FUNCTION(DATA) {
-// 							IF (DATA) {
-// 								IF (PARSEINT(DATA['STATUS']) > 0) {
-// 									//$.LIGERDIALOG.SUCCESS('提交成功');
-// 									//$("#QUALITY").HIDE();
-// 									TOQUERY();
-// 								} ELSE {
-// 									$.LIGERDIALOG.ERROR('提交失败');
-// 								}
-// 							}
-// 						});
+					if(!printFormatUrl==''){
+						
+						printWin = $.ligerDialog.open({height:600,width:800,url:printFormatUrl.concat(defGrid.getRow(rowid).code),title:'打印入库单'});
+						
+					}else{
+						$.ligerDialog.error('打印格式未找到','错误');
+						return;
+					}
 				}
-				
 			}
 	    </script>
 		<style type="text/css">
@@ -253,7 +271,7 @@
 					<label>采购订单号</label><input type="text" class="s-text-qCond txt-def" id="originQ" />
 					<label>供应商</label>
 					<select id="partnerQ" param="partner_list" first="" ></select>
-					<label>状态</label><select id="stateS" param="stockreceipy" first="" ></select>
+					<label>单据状态</label><select id="stateS" param="inStockState" first="" ></select>
 					<input type="button" value="查询" style="margin-left:25px;" onclick="toQuery();" />
 					<input type="button" value="清空" onclick="toReset('#codeQ,#originQ,#partnerQ');" />
 				</div>

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-		<title>生产领用出库</title>
+		<title>出库确认管理</title>
 		
 		<link rel="stylesheet" type="text/css" href="../css/cm-default.css"  />
 		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/Aqua/css/ligerui-all.css" />
@@ -14,40 +14,48 @@
 		<script type="text/javascript">
 			var defGrid;
 			var opt;
-			//去传输过来的信息
-			var str = window.location.toString().replace(/^[^?]+\??/, "");
+// 			//去传输过来的信息
+// 			var str = window.location.toString().replace(/^[^?]+\??/, "");
 			
-			var ss = str.split('?');
-			var query = new Object();
-			for (var i = 0; i < ss.length; i++) {
-				eval('query.'.concat(ss[i].split('=')[0]).concat('="').concat(ss[i].split('=')[1]).concat('"'));
-			}
-			opt = query['m'];
+// 			var ss = str.split('?');
+// 			var query = new Object();
+// 			for (var i = 0; i < ss.length; i++) {
+// 				eval('query.'.concat(ss[i].split('=')[0]).concat('="').concat(ss[i].split('=')[1]).concat('"'));
+// 			}
+// 			opt = query['m'];
+
+			var query = getQueryString(window.location.toString());
+			opt = query.m;
 			
 			$(function(){
                	defGrid = $("#query_list").ligerGrid({
                     columns:[
  						{display:'操作',isSort:false,width:120,render:function(rowdata,rowindex,value) {
 							
-							// 制单环节：单据状态  state      00 未审核     >>审核 >>    10 已审核     >>提交>>     20已提交                 99 驳回修改
+							// 制单环节：单据状态  state      00 未审核     >>审核 >>    10 已审核     >>提交>>     20已提交                 09 驳回修改
 							// 质检环节：                                               20 待质检    >>质检确认>>  30已质检     >>审核>>      40已审核  >>提交>>  50已提交
 							// 出入库确认环节                                       50待打印     >>打印>>     60已打印   >>出入库确认>>   70出库完成           
 							
 							// 流程状态 flow_state 00 新建（制单） 10 入库质检     20入、出库确认    30 入、出库完成
 							var h = "";
 							var row = defGrid.getRow(rowindex);
+							//alert(row.state);
 							//打印出库单
-							  if(row.state  <= 50 ){							
- 									h += "<a href='javascript:void(0);' class='opt-link' onclick='toPrint(" + rowindex + ")'>打印</a> ";
-							  	}
-							  if(row.flow_state > 50)
+// 							  if(row.state  <= 50 ){							
+//  									h += "<a href='javascript:void(0);' class='opt-link' onclick='toPrint(" + rowindex + ")'>打印</a> ";
+// 							  	}
+//							
+// 							  h += "<a href='javascript:void(0);' class='opt-link' onclick='toPrint(" + rowindex + ")'>打印</a> ";
+							  if(row.state == '50')
+								 h += "待打印  "; 
+							  if(row.state > 50)
 								 h += "已打印  "; 
 							  
 							//待确认出库 ，在里面进行 确认出库 
  							 if(row.state <= 60 )
                                h += "待确认出库 ";
 							
- 							 if(row.flow_state >='70') 
+ 							 if(row.state >= 70) 
 							  	{  								
  								h += "出库完成  ";
 							  	}
@@ -56,7 +64,8 @@
 	 							{
  									h = "已驳回修改 ";
 	 							}
-                        	 return h; 
+                        	 return h;
+                        	 
                         },frozen:true},
                         //{display:'单据类型',name:'move_type',width:90,minWidth:60,render:function(item){return paramRender(item,'stockBillType',item.move_type);}},
                         {display:'单据状态',name:'state',width:80,minWidth:60,render:function(item){return paramRender(item,'outStockState',item.state);}},
@@ -116,14 +125,29 @@
                     param_partner:'partner_list'
                    
 				});
-				appendModifyBtn(openModify, "审核入库单");
+				appendModifyBtn(openModify, "维护出库单");
+				appendSearchBtn(searchRow, "查看单据信息");
 				$("#pageloading").hide();
-				//默认查询全部数据 
-				toQuery();
+
 				ajaxSubmit("/cm/rbac/cmUser.do?method=getUserInfo", null, function(data) {
 					$('#UserCodeS').val(data['uid']);
 				}, null, false);
+				//默认查询全部数据 
+				toQuery();
 			});
+			
+			//通用单据查询 界面
+			function searchRow(){
+				var row = defGrid.getSelectedRow();
+
+				if (!row) {
+					$.ligerDialog.error('请先选择要查看的单据！','错误');
+					return;
+				}
+				
+				parent.f_addTab('new_search_stockS','单据明细信息','./stock/search_stock_picking.html?o=m&code='.concat(row.code));
+			}
+
 			
 			function sw_opt(item) {
 				var swd = paramRender(item, defGrid.options.param_movein, item.move_in_user);
@@ -185,27 +209,33 @@
 			}
 
 
-			//打印处理
 			var printWin;
+			var printFormatUrl='';
 			function toPrint(rowid) {
 				var row = defGrid.getRow(rowid);
-
-				
 				var printFlag =false
-				if(row.state >='60'){
-					if(window.confirm('该单据已打印过，请确认是否需要第二次打印？')==true)
+				if(row.state >= 60){
+					if(window.confirm('该单据已打印过，请确认是否需要再次打印？')==true)
 				    printFlag=true;
-// 					$.ligerDialog.error('已打印请勿重复打印，不能打印，请确认！');
-// 					return;					
 				}else{
 					printFlag=true;
 				}
-				
 				if(printFlag){
-					printWin = $.ligerDialog.open({height:600,width:800,url:'./print_stock_pocket_picking.html?id='.concat(defGrid.getRow(rowid).code),title:'打印入库单'});
+					if(opt=='no'){
+						//销售发货
+						printFormatUrl='./print_proSale_outStock.html?id=';
+					}else if(opt=='yes'){
+						//生产领用出库
+						printFormatUrl='./print_req_rawMat_outStock.html?id=';
+					}
+					if(!printFormatUrl=='')	
+					printWin = $.ligerDialog.open({height:600,width:800,url:'./print_stock_picking.html?id='.concat(defGrid.getRow(rowid).code),title:'打印入库单'});
+					else{
+						$.ligerDialog.error('打印格式未找到','错误');
+						return;
+					}
 				}
-			}			
-			
+			}
 			function upPickingDel(param1,upSqlConID,successInfo,errorInfo){
 				 var param = JSON.stringify(reqObj('u','stock.update.picking_state.update',JSON.stringify(param1)));
 					
@@ -228,17 +258,18 @@
 					$.ligerDialog.error('请先选择出库单记录。','错误');
 					return;
 				}
-				if(row.state=='50'){
+				if(row.state=='09'){
 					$.ligerDialog.error('该单据已驳回，不能被编辑，请确认！');
 					return;
 				}
+// 				if(row.state > 60 ){
+// 					$.ligerDialog.error('该单据已确认出库，不能被编辑，请确认！');
+// 					return;
+// 				}
 				
 				parent.f_addTab('deliver_stockp','出库单维护','./stock/new_stock_deliver.html?o=m&code='.concat(row.code));
 			}
-			var printWin;
-			function toPrint(rowid) {
-				printWin = $.ligerDialog.open({height:600,width:800,url:'./print_stock_picking.html?id='.concat(defGrid.getRow(rowid).code),title:'打印入库单'});
-			}
+
 	    </script>
 		<style type="text/css">
 			label{margin: 5px 20px 5px 15px;}
@@ -262,7 +293,7 @@
 				<div id="query_cond" class="fields">
 					<label>出库单号</label><input type="text" class="s-text txt-def" id="codeQ" />
 					<label>生产任务单号</label><input type="text" class="s-text txt-def" id="originQ" />
-					<label>状态</label><select id="stateS" param="Deliver" first="" ></select>
+					<label>单据状态</label><select id="stateS" param="outStockState" first="" ></select>
 					<input type="button" value="查询" style="margin-left:25px;" onclick="toQuery();" />
 					<input type="button" value="清空" onclick="toReset('#codeQ,#originQ,#partnerQ');" />
 				</div>

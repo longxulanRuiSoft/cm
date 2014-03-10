@@ -19,10 +19,12 @@
                     columns:[
 							{display:'商品编号',name:'code',width:130,minWidth:60},
 		                    {display:'品	名',name:'name',width:130,minWidth:60},
-		                    {display:'规格型号',name:'specs',width:130},
+		                    {display:'规格/型号',name:'specs',width:130},
 				            {display:'单	位',name:'uom_id',width:80,align:'left'},
-				            {display:'仓	库',name:'ware_hose_id',width:80},
-				            {display:'库存数量',name:'product_qty',width:80,align:'left'}
+				            //{display:'仓	库',name:'ware_hose_id',width:80},
+				            {display:'库存数量',name:'product_actual_qty',width:80,align:'left',render:function(item){return item.product_actual_qty?parseFloat(item.product_actual_qty).toFixed(2):'';}},
+				            {display:'已占用数量',name:'product_occupy_qty',width:100,align:'right',render:function(item){return item.product_occupy_qty?parseFloat(item.product_occupy_qty).toFixed(2):'';}},
+    			            {display:'可用数量',name:'product_enable_qty',width:100,align:'right',render:function(item){return item.product_enable_qty?parseFloat(item.product_enable_qty).toFixed(2):'';}},
 				           // {display:'状	态',name:'state',width:80,align:'left'}
 					           // {display:'待收货数量',name:'state',width:80,align:'left'}
 					           // {display:'待发货数量',name:'state',width:80,align:'left'}
@@ -40,20 +42,59 @@
                     enabledEdit:true,
                     clickToEdit:false,
                     onSelectRow:function(rowdata, rowindex){$("#txtrowindex").val(rowindex);},
-//                     onUnSelectRow:unselected,
+//                  onUnSelectRow:unselected,
                     onReload: toQuery,
-//                     onToFirst: toFirst,
-//                     onToLast: toLast,
-//                     onToNext: toNext,
-//                     onToPrev: toPrev,
+                    url: '../common/q.jsp',
+                    //wws 2014-2-23 增加分页信息 start
+                    onToFirst: function(item) {
+                        toQuery(item, 1);
+                    },
+                    onToLast: function(item) {
+        				var p = parseInt(defGrid.options.total / defGrid.options.pageSize);
+        				if (defGrid.options.total % defGrid.options.pageSize > 0)
+        					p += 1;
+        				toQuery(item, p);
+                    },
+                    onToPrev: function(item) {
+        				var p = parseInt(defGrid.options.page);
+        				if (p > 1)
+        					p -= 1;
+        				else
+            				return;
+        				toQuery(item, p);
+                    },
+                    onToNext: function(item) {
+                    	var p = parseInt(defGrid.options.total / defGrid.options.pageSize);
+        				if (defGrid.options.total % defGrid.options.pageSize > 0)
+        					p += 1;
+    					var cp = parseInt(defGrid.options.page); 
+    					if (cp < p)
+        					cp += 1;
+        				toQuery(item, cp);
+                    },
+                    //wws 2014-2-23 增加分页信息 end
                     param_status:'rbac.status'
 				});
 				defGrid.options.dataAction = 'server';
-				appendAddBtn(openDictDef, "添加字典字义");
+// 				appendAddBtn(openDictDef, "添加字典字义");
+				appendSearchBtn(searchRow, "查看单据信息");
 				$("#pageloading").hide();
 
 				toQuery();
 			});
+			
+			//通用单据查询 界面
+			function searchRow(){
+				var row = defGrid.getSelectedRow();
+
+				if (!row) {
+					$.ligerDialog.error('请先选择要查看的单据！','错误');
+					return;
+				}
+				
+				parent.f_addTab('new_search_stockS','单据明细信息','./stock/search_stock_picking.html?o=m&code='.concat(row.code));
+			}
+
 	        function beginEdit(rowid) { 
 	        	defGrid.beginEdit(rowid);
 	        }
@@ -92,36 +133,26 @@
 				var param = new Object();
 				param.ware_hose_id=$("#moveware_hose").val();
 				param.name = $("#movename").val();
-				param.origin = $("#moveorigin").val();
+				param.code = $("#movecode").val();
+				param.specs = $("#movespecs").val();
 				//param.state = $("#moveState").val();
 
-				var data = JSON.stringify(reqObj('q','stock.select.stock_qty.query',JSON.stringify(param),'l',true,page,pageSize));
+				var data = JSON.stringify(reqObj('q','stock.select.product.stock.qty.query',JSON.stringify(param),'l',true,page,pageSize));
 				ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
+					 //wws 2014-2-23 增加分页信息 start 
+					var d = data['data'].Rows;
+					var ps = defGrid.options.pageSize, p = defGrid.options.page, t = parseInt(data['data'].Total);
+					if (t > ps) {
+						for (var i = 0; i < (p - 1) * ps; i++) {
+							d.unshift(null);
+						}
+					}
+					defGrid.data = data['data'];
+					 //wws 2014-2-23 增加分页信息  end 
 					defGrid.set({data: data['data']});
-				});
+				},null,false);
 			}
-			function toFirst() {
-				toQuery(null, 1);
-			}
-			function toLast() {
-				var p = parseInt(defGrid.options.total / defGrid.options.pageSize);
-				if (defGrid.options.total % defGrid.options.pageSize > 0)
-					p += 1;
-				toQuery(null, p);
-			}
-			function toNext() {
-				var p = parseInt(defGrid.options.total / defGrid.options.pageSize);
-				if (defGrid.options.total % defGrid.options.pageSize > 0)
-					p += 1;
-				if (defGrid.options.page == p)
-					return;
-				toQuery(null, defGrid.options.page + 1);
-			}
-			function toPrev() {
-				if (defGrid.options.page == 1)
-					return;
-				toQuery(null, defGrid.options.page - 1);
-			}
+
 			var addDialog;
 			function openDictDef() {
 				toReset('#new_dict_def input,select,textarea');
@@ -157,10 +188,12 @@
 		<div id="layout_main">
 			<div position="center" id="a_center" title="参数字典列表">
 				<div id="query_cond" class="fields">
-					<label>仓库选择</label>
+					<!-- <label>仓库选择</label>
 					<select id="moveware_hose" param="base_point" first=""></select>
-					<label>商品名称</label><input type="text" class="s-text txt-def" id="movename" />
-					<label>商品规格</label><input type="text" class="s-text txt-def" id="moveorigin" />
+					 -->
+					<label>编号</label><input type="text" class="s-text txt-def" id="movecode" />
+					<label>名称</label><input type="text" class="s-text txt-def" id="movename" />
+					<label>规格/规格</label><input type="text" class="s-text txt-def" id="movespecs" />
 					<!--  <label>状态</label><select id="moveState" param="rbac.status" first=""></select>-->
 					<input type="button" value="查询" style="margin-left:25px;" onclick="toQuery();" />
 					<input type="button" value="清空" onclick="toReset('#query_cond input,select,textarea');" />

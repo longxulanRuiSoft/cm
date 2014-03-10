@@ -43,8 +43,8 @@
 			            {display:'规格/型号',name:'specs',width:100},
 			            {display:'单位',name:'product_uom',width:60,render:function(item){return paramRender(item,'uom',item.product_uom);}},
 			            {display:'品牌',name:'brand',width:80,render:function(item){return paramRender(item,'brand',item.brand);},editor:{type:'select',data:getData('Brand'),valueField:'value',textField:'name'}},
-			            {display:'采购数量',name:'tar_product_qty',align:'right',editor:{type:'string'},render:function(item){return item.tar_product_qty ? parseFloat(item.tar_product_qty).toFixed(0) : '';}},
-			            {display:'入库数量',name:'product_qty',id:'num',align:'right',editor:{type:'string'},render:function(item){return item.product_qty ? parseFloat(item.product_qty).toFixed(0) : '';}},
+			            {display:'采购数量',name:'tar_product_qty',align:'right',editor:{type:'string'},render:function(item){return item.tar_product_qty ? parseFloat(item.tar_product_qty).toFixed(2) : '';}},
+			            {display:'入库数量',name:'product_qty',id:'num',align:'right',editor:{type:'string'},render:function(item){return item.product_qty ? parseFloat(item.product_qty).toFixed(2) : '';}},
 			            {display:'采购单价',name:'source_price_unit',align:'right',editor:{type:'string'},render:function(item){return item.source_price_unit ? parseFloat(item.source_price_unit).toFixed(2) : '';}},
 			            {display:'入库单价',name:'price_unit',id:'price',align:'right',editor:{type:'string'},render:function(item){return item.price_unit ? parseFloat(item.price_unit).toFixed(2) : '';}},
 			            {display:'金额',name:'total',id:'total',align:'right',render:calcTotal}
@@ -141,7 +141,7 @@
 				toReset('#a_center input:not(.readonly),select,textarea');
 			}
 			function selectProduct() {
-				var selDialog = $.ligerDialog.open({height:500,width:650,isResize:false,url:'../sysmgt/product_query2.html?o=s',title:'选择商品',
+				var selDialog = $.ligerDialog.open({height:400,width:650,isResize:true,url:'../sysmgt/product_query2.html?o=s',title:'选择商品',
 					buttons: [
 						{text:'确定',onclick: function(item, dialog){
 							var data = dialog.frame.getSelectedRow();
@@ -227,11 +227,11 @@
 						result = '入库数量必须录入大于0的整数';
 						break;
 					}
-					if (!r.source_price_unit || parseInt(r.source_price_unit) === 0) {
+					if (!r.source_price_unit || parseInt(r.source_price_unit) === 0.00001) {
 						result = '采购单价必须录入大于0的数值';
 						break;
 					}
-					if (!r.price_unit || parseInt(r.price_unit) === 0) {
+					if (!r.price_unit || parseInt(r.price_unit) === 0.00001) {
 						result = '入库单价必须录入大于0的数值';
 						break;
 					}
@@ -391,9 +391,9 @@
 	        }
 			function calcTotal(item) {
 				if (item.product_qty && item.price_unit) {
-					return (parseFloat(item.product_qty) * parseFloat(item.price_unit)).toFixed(2);
+					return (parseFloat(item.product_qty) * parseFloat(item.price_unit)).toFixed(4);
 				}
-				return '0.00';
+				return '0.0000';
 			}
 			function getPData() {
 				var data = JSON.stringify(reqObj('q','stock.select.product.query','{}','l',false));

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-		<title>质检</title>
+		<title>质检确认</title>
 		
 		<link rel="stylesheet" type="text/css" href="../css/cm-default.css"  />
 		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/Aqua/css/ligerui-all.css" />
@@ -114,10 +114,25 @@
 				});
 				//appendAddBtn(openDictDef, "添加入库单");
 				appendModifyBtn(openModify, "编辑质检单");
+				appendSearchBtn(searchRow, "查看单据信息");
+				
 				$("#pageloading").hide();
 				//默认查询全部数据 
 				toQuery();
 			});
+			
+			
+			//通用单据查询 界面
+			function searchRow(){
+				var row = defGrid.getSelectedRow();
+
+				if (!row) {
+					$.ligerDialog.error('请先选择要查看的单据！','错误');
+					return;
+				}
+				
+				parent.f_addTab('new_search_stockS','单据明细信息','./stock/search_stock_picking.html?o=m&code='.concat(row.code));
+			}
 			function sw_opt(item) {
 				var swd = paramRender(item, defGrid.options.param_movein, item.move_in_user);
 				if (!swd)
@@ -146,7 +161,7 @@
 				param.code = $("#codeQ").val();
 				param.origin = $("#originQ").val();
 				param.partner_id = $("#partnerQ").val();
-				//param.state=$("#stateS").val();
+				param.state=$("#stateS").val();
 				param.type='0';
 				param.flow_state='10';
 				var data = JSON.stringify(reqObj('q','stock.select.picking.quality.query',JSON.stringify(param),'l',true,page,pageSize));
@@ -192,7 +207,7 @@
 			function toConfirm(rowid) {
 				var row = defGrid.getRow(rowid);
 				if(row.state < 30){
-					$.ligerDialog.error('该单据还未质检确认，请先质检确认！');
+					$.ligerDialog.error('该单据还未质检确认，请进入通过编辑按钮，进入单据明细界面，进行质检确认！');
 					return;
 				}
 				var param1=new Object();
@@ -263,7 +278,7 @@
 					<label>采购申请单号</label><input type="text" class="s-text-qCond txt-def" id="originQ" />
 					<label>供应商</label>
 					<select id="partnerQ" param="partner_list" first="" ></select>
-					<label>状态</label><select id="stateS" param="stockquality"  ></select>
+					<label>单据状态</label><select id="stateS" param="qcStockState" first="" ></select>
 					<input type="button" value="查询" style="margin-left:25px;" onclick="toQuery();" />
 					<input type="button" value="清空" onclick="toReset('#codeQ,#originQ,#partnerQ');" />
 				</div>

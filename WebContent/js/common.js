@@ -299,6 +299,17 @@ function appendModifyBtn(action, title) {
 	appendBtnForGridToolbar("l-bar-btnedit", "l-icon-modify", action, title);
 }
 /**
+ * 向Grid组件中的Toolbar中添加“查询”按钮
+ * 
+ * @param action Function 按钮的onclick事件
+ * @param title String 鼠标指向该按钮时的提示信息
+ */
+function appendSearchBtn(action, title) {
+	if (!title)
+		title = "查询";
+	appendBtnForGridToolbar("l-bar-btnsearch", "l-icon-search", action, title);
+}
+/**
  * 向Grid组件中的Toolbar中添加“删除”按钮
  * 
  * @param action Function 按钮的onclick事件

@@ -11,36 +11,59 @@
 		<script src="../ligerUI/js/ligerui.all.js" type="text/javascript"></script>
 		<script src="../js/common.js" type="text/javascript"></script>
 		<script type="text/javascript">
+		var qs;
+		var codeQ = window.location.toString().replace(/^[^?]+\?id=/, '');
+		
 			$(function(){
+				qs = getQueryString(window.location.toString());
+				//alert(qs);
 				$("#d-menu").ligerToolBar({items:[
-				    {text:'打印',click:function(){window.print()},icon:'print'},
+				    {text:'打印',click:function() {
+					    window.print();
+					    var param = {
+							id: $('#id').val(),
+							state: "60",
+							flow_state: $('#flow_state').val()
+					    };
+	                
+						ajaxSubmit("/cm/rbac/cm.do?m=u", JSON.stringify(
+								reqObj('u','stock.update.picking_state.update', JSON.stringify(param))),
+							function(data) {
+								if (data) {
+									if (parseInt(data['status']) > 0) {								
+										$.ligerDialog.success('打印成功');
+									} else {								
+										$.ligerDialog.error('打印失败');
+									}
+								}
+						});
+				    }, icon:'print'},
 					{line:true}
 				]});
 				toQuery();
 				
 				$("#pageloading").hide();
 			});
+// 			window.onafterprint = function() {
+// 				alert("printed.");
+// 			}
 			var minLine = 10;
 			var tr = '<tr><td>${code}</td><td>${name}</td><td>${specs}</td><td>${brand}</td><td>${product_uom}</td><td>${product_qty}</td></tr>';
 			function toQuery() {
-				//no
-				var codeQ = window.location.toString().replace(/^[^?]+\?id=/, '');
+				//var codeQ = qs.id;
+				//codeQ
+				alert(codeQ);
 				//时间
 				var data = JSON.stringify(reqObj('q','stock.select.picking.query',JSON.stringify({code:codeQ})));
 				ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
 					var picking = data.data.Rows[0];
-// 					if (picking.recpt_in_date === undefined) {
-// 						$.ligerDialog.error('入库单[' + codeQ + ']尚未完成入库操作，无法进行打印。','无法打印',function(){
-// 							parent.printWin.close();
-// 						});
-// 						return;
-// 					}
-					
-					$("#partnerS").text(picking.partner_id);
-					$("#moveInDateS").text(picking.recpt_in_date);
-					$("#codeS").text(picking.code);
-					$("#originS").text(picking.origin);
-					$("#warehoseS").text(picking.warehose_id);
+					$("#partnerS").val(picking.partner_id);
+					$("#codeS").val(picking.code);
+					$("#originS").val(picking.origin);
+					$("#warehoseS").val(picking.warehose_id);
+				}, null, false);
+				ajaxSubmit("/cm/rbac/cmUser.do?method=getUserInfo", null, function(data) {
+					$("#moveInDateS").val(data['date']);
 				}, null, false);
 
 				data = JSON.stringify(reqObj('q','stock.select.move.query',JSON.stringify({picking_id:codeQ})));
@@ -53,7 +76,7 @@
 								.replace(/\$\{specs\}/, moves[i].specs)
 								.replace(/\$\{brand\}/, paramRender(null,'brand',moves[i].brand))
 								.replace(/\$\{product_uom\}/, paramRender(null,'uom',moves[i].product_uom))
-								.replace(/\$\{product_qty\}/, parseInt(moves[i].product_qty).toFixed(0)));
+								.replace(/\$\{product_qty\}/, parseInt(moves[i].product_qty).toFixed(2)));
 					}
 					if (moves.length < minLine) {
 						for (var i = 0; i < minLine - moves.length; i++)

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-		<title>生产领用单办理</title>
+		<title>生产领用单维护</title>
 		
 		<link rel="stylesheet" type="text/css" href="../css/cm-default.css"  />
 		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/Aqua/css/ligerui-all.css" />
@@ -46,7 +46,7 @@
 			            {display:'库存数量',name:'product_actual_qty',width:100,align:'right'},
 			            {display:'已占用数量',name:'product_occupy_qty',width:100,align:'right'},
 			            {display:'可用数量',name:'product_enable_qty',width:100,align:'right'},
-			            {display:'出库数量',name:'product_qty',width:100,align:'right',editor:{type:'string'},render:function(item){return item.product_qty ? parseFloat(item.product_qty).toFixed(0) : '';}}
+			            {display:'出库数量',name:'product_qty',width:100,align:'right',editor:{type:'string'},render:function(item){return item.product_qty ? parseFloat(item.product_qty).toFixed(2) : '';}}
 			        ],
                     pageSize:20,
                     usePager: true,
@@ -181,14 +181,7 @@
 						result = '出库数量不能大于可用数量';
 						break;
 					}
-// 					if (!r.source_price_unit || parseInt(r.source_price_unit) === 0) {
-// 						result = '采购单价必须录入大于0的数值';
-// 						break;
-// 					}
-// 					if (!r.price_unit || parseInt(r.price_unit) === 0) {
-// 						result = '入库单价必须录入大于0的数值';
-// 						break;
-// 					}
+
 				}
 
 				if (result) {
@@ -210,7 +203,7 @@
 			// 选择商品 处理
 			var curRow, selDialog;
 			function selectProduct() {
-				var selDialog = $.ligerDialog.open({height:500,width:650,isResize:false,url:'../sysmgt/product_query2.html?o=s',title:'选择商品',
+				var selDialog = $.ligerDialog.open({height:400,width:650,isResize:true,url:'../sysmgt/product_query2.html?o=s',title:'选择商品',
 					buttons: [
 						{text:'确定',onclick: function(item, dialog){
 							var data = dialog.frame.getSelectedRow();
@@ -249,7 +242,7 @@
 					$('#warehouseS').val(data.warehose_id);
 					$('#moveInS').val(paramRender(null,'user',data.move_in_user));
 					$('#moveInIdS').val(data.move_in_user);
-					$('#note').val(data.note);
+					$('#noteS').val(data.note);
 					$('#deptS').val(paramRender(null,'org_list',data.dept_id));
 					$('#deptCodeS').val(data.dept_id);
 					$('#createUserS').val(paramRender(null,'user',data.createuser));
@@ -269,21 +262,10 @@
 		    	parent.tabManager.removeTabItem("new_pocket");
 			 }
 			// 保存业务处理
-			function toSave() {
-				// 必输数据项校验控制
-				var valid = true;
-				$('*[id$="S"],*[id$="S_txt"]').each(function(index, element) {
-					if (!$(this).rules()) return;
-					if (!$(element).valid()) {
-						valid = false;
-						return;
-					}
-				});
-				if (!valid) return;
-				if (pGrid.rows.length === 0) {
-					$.ligerDialog.error('请添加入库商品。','错误');
+			function toAdd() {
+				pGrid.endEdit();
+				if (!validate())
 					return;
-				}
 				
 				var param = {
 					origin:$("#originS").val(),
@@ -293,114 +275,13 @@
 					moveinuser:$("#moveInIdS").val(),
 					note:$("#noteS").val()
 				};
-				var en = 'stock.add.yclrk.picking.add', optType = 'a';
-				//编辑时处理
+				var en = 'stock.add.ly.ck.picking.add', optType = 'a';
 				if (opt === 'm') {
-					
 					param.code = $('#codeS').val();
 					//修改人
 					param.writeusercode=$('#WriteUserCodeS').val();
 					//修改日期
 					param.writedate=$('#WriteDateS').val();
-					// 进行修改数据库处理
-					en = 'stock.update.picking';
-					// 操作类型为 update
-					optType = 'u';
-					
-				} else {
-					// 新增时处理
-					
-					pGrid.endEdit(c_row.rowindex);
-					
-					//处理 stock_picking 表
-					//生产领用  发货处理
-					var param = new Object();
-					param.company = "";
-					param.dept = $("#deptCodeS").val();
-					param.busiorg = "";
-					param.name = "";					
-					param.origin = $("#originS").val();
-					param.partner = $("#partnerS").val();
-					param.preddate = $("#predDateS").val();
-					param.warehose = $("#warehouseS").val();
-					param.moveinuser = $("#moveInIdS").val();
-					param.note = $("#note").val();
-					param.createuser = $("#createUserCodeS").val();
-					param.createdate = $("#createDateS").val();
-					//修改日期
-					param.writedate=$("#WriteDateS").val();
-					
-					// 单据的状态处理
-					
-					//单据性质 0 收货 1 发货
-					param.type = "1";
-					// 指单据类型 ，03  生产领用单
-					param.movetype="03";
-				 
-					param.state="00";
-					// 单据流程状态 是指， 单据的流转去向，及业务流程中的各处理环节 如：生产领用单据   生产管理中制单、库存管理中的出库
-					param.flow_state="00";
-					
- 
-					
-					// 新插入一条记录 出库单记录处理
-					var data = JSON.stringify(reqObj('a','stock.add.picking.add',JSON.stringify(param)));
-					ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
-						var picking = data['added'];
-						var picking_Code=picking['#stock.picking.ly.ck.code'];
-						var rows = pGrid.rows;
-						for (var i = 0; i < rows.length; i++) {
-							rows[i].picking_id = picking_Code;                            
-							rows[i].origin = $('#originS').val();
-							rows[i].type = '0';
-							rows[i].createuser = $('#createUserCodeS').val();
-							rows[i].createdate = $('#createDateS').val();
-							rows[i].dept_id = $('#deptCodeS').val();
-							rows[i].company_id = '';
-							rows[i].busiorg_id = '';
-						}
-						//保存后显示单据编号处理
-						$('#codeS').val(picking_Code);
-						
-						//保存后 将 opt 标记为 编辑状态， 再次点击保存时，进行单据修改的 update处理
-						opt='m';
-						
-						// 商品明细列表的 新增处理
-						var data = JSON.stringify(reqObj('ba','stock.add.stock_move',rows));
-						ajaxSubmit("/cm/rbac/cm.do?m=ba", data, function(data) {
-							$.ligerDialog.success('保存成功', '操作完成', function() {
-								if (data) {
-
-								}
-								
-							});
-						});
-					});
-				}
-			}
-			function toAdd() {
-				pGrid.endEdit();
-				if (!validate())
-					return;
-				
-				
-				var param = {
-					origin:$("#originS").val(),
-					partner:$("#partnerS").val(),
-					preddate:$("#predDateS").val(),
-					warehose:$("#warehouseS").val(),
-					moveinuser:$("#moveInIdS").val(),
-					note:$("#note").val()
-				};
-				var en = 'stock.add.yclrk.picking.add', optType = 'a';
-				if (opt === 'm') {
-				
-					param.code = $('#codeS').val();
-					//修改人
-					param.writeusercode=$('#WriteUserCodeS').val();
-					//修改日期
-					param.writedate=$('#WriteDateS').val();
-					//alert($('#WriteDateS').val())
 					// 进行修改数据库处理
 					en = 'stock.update.picking';
 					// 操作类型为 update
@@ -411,25 +292,13 @@
 					param.dept = $("#deptCodeS").val();
 					param.busiorg = "";
 					param.name = "";
-				//	param.type = "0";
+					param.type = "1";
 					param.createuser = $("#createUserCodeS").val();
 					param.createdate = $("#createDateS").val();
-					param.writedate=$('#WriteDateS').val();
-					//param.movetype="01";
-					//param.state="00";
-                  
-					// 单据的状态处理
-					
-					//单据性质 0 收货 1 发货
-					param.type = "1";
-					// 指单据类型 ，03  生产领用单
 					param.movetype="03";
-					// 单据状态 state      00 新建  10 未审核 20 已审核 30 未提交 40已提交  50 已驳回
-					// 流程状态 flow_state 00 新建（制单） 10 入库质检     20 入、出库审核   30 打印出入库单   40 入、出库确认    50 入、出库完成					 
 					param.state="00";
-					// 单据流程状态 是指， 单据的流转去向，及业务流程中的各处理环节 如：生产领用单据   生产管理中制单、库存管理中的出库
 					param.flow_state="00";
-					
+					param.writedate=$('#WriteDateS').val();
 				}
 				var data = JSON.stringify(reqObj(optType,en,JSON.stringify(param)));
 				ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
@@ -440,7 +309,7 @@
 							if (rows[i].__status === 'add') {
 								rows[i].picking_id = $('#codeS').val();
 								rows[i].origin = $('#originS').val();
-								rows[i].type = '0';
+								rows[i].type = '1';
 								rows[i].createuser = $('#createUserCodeS').val();
 								rows[i].createdate = $('#createDateS').val();
 								rows[i].dept_id = $('#deptCodeS').val();
@@ -453,7 +322,6 @@
 						}
 						var ar = 0, br = 0;
 						if (addRows.length > 0) {
-							
 							var data_a = JSON.stringify(reqObj('ba','stock.add.stock_move',addRows));
 							ajaxSubmit("/cm/rbac/cm.do?m=ba", data_a, function(result) {
 								ar = result['status'];
@@ -461,7 +329,7 @@
 									$.ligerDialog.success('保存成功', '操作完成', reloadPage);
 							}, null, false);
 						} else {
-							ar = 1;
+							ar = 1; 
 						}
 						if (ar > 0 && updateRows.length > 0) {
 							var data_u = JSON.stringify(reqObj('bu','stock.update.stock_move', updateRows));
@@ -478,11 +346,11 @@
 					} else {
 						// 新增处理
 						var picking = data['added'];
-						c_code = picking['#stock.picking.ycl.rk.code'];
+						c_code = picking['#stock.picking.ly.ck.code'];
 						for (var i = 0; i < rows.length; i++) {
 							rows[i].picking_id = c_code;
 							rows[i].origin = $('#originS').val();
-							rows[i].type = '0';
+							rows[i].type = '1';
 							rows[i].createuser = $('#createUserCodeS').val();
 							rows[i].createdate = $('#createDateS').val();
 							rows[i].dept_id = $('#deptCodeS').val();
@@ -496,6 +364,7 @@
 					}
 				});
 			}
+			//重新加载页面 ，在保存时调用
 			 function reloadPage() {
 		        	window.location = './new_stock_pocket_picking.html?o=m&code='.concat(c_code);
 			    }
@@ -550,7 +419,6 @@
 	</head>
 	<body style="padding:0;">
 		<div id="pageloading"></div>  
-		<input type="hidden" id="saveQ" />
 		<div id="layout_main">
 			<div position="center" id="a_center" title="基本信息" style="overflow:auto;">
 				<div id="d-menu" class="toolbar"></div>
@@ -580,7 +448,7 @@
 					<div class="line-div" style="height:76px;">
 						<div class="label-div"><label>备注</label></div>
 						<div class="in-div" style="width:72%;">
-							<textarea cols="80" rows="2" id="note"></textarea>
+							<textarea cols="80" rows="2" id="noteS"></textarea>
 						</div>
 					</div>
 					<div class="line-div">

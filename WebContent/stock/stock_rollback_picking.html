@@ -53,6 +53,7 @@
 				});
 				appendAddBtn(openDictDef, "添加退回单");
 				appendModifyBtn(openModify, "修改退回单");
+				appendSearchBtn(searchRow, "查看单据信息");
 				$("#pageloading").hide();
 
 				ajaxSubmit("/cm/rbac/cmUser.do?method=getUserInfo", null, function(data) {
@@ -62,6 +63,20 @@
 				//默认查询全部数据 
 				toQuery();
 			});
+			
+
+			//通用单据查询 界面
+			function searchRow(){
+				var row = defGrid.getSelectedRow();
+
+				if (!row) {
+					$.ligerDialog.error('请先选择要查看的单据！','错误');
+					return;
+				}
+				
+				parent.f_addTab('new_search_stockS','单据明细信息','./stock/search_stock_picking.html?o=m&code='.concat(row.code));
+			}
+			
 			function sw_opt(item) {
 				var swd = paramRender(item, defGrid.options.param_movein, item.move_in_user);
 				if (!swd)

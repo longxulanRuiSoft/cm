@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-		<title>收货</title>
+		<title>收货入库确认维护</title>
 		
 		<link rel="stylesheet" type="text/css" href="../css/cm-default.css"  />
 		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/Aqua/css/ligerui-all.css" />
@@ -28,7 +28,7 @@
 				            				    {line:true},
 //				             				    {text:'出库单审核',id:'toConfirm',click:toConfirm,icon:'ok'},
 //				             				    {line:true},
-				            				    {text:'打印入库单',id:'',click:toPrint,icon:'print'},
+				            				    {text:'打印入库单',id:'toPrint',click:toPrint,icon:'print'},
 				            					{line:true},
 				            				    {text:'确认入库',id:'submitConfirm',click:submitConfirm,icon:'ok'},
 				            					{line:true},
@@ -47,8 +47,8 @@
 			            {display:'品牌',name:'brand',width:60,render:function(item){return paramRender(item,'brand',item.brand);}
 			            ,editor:{type:'select',data:getData('Brand'),valueField:'value',textField:'name'}
 			            },
-			           // {display:'采购数量',name:'tar_product_qty',width:90,align:'right',editor:{type:'int'},render:function(item){return parseFloat(item.tar_product_qty).toFixed(0);}},
-			            {display:'收货数量',name:'product_qty',width:90,id:'num',align:'right',editor:{type:'int'},render:function(item){return parseFloat(item.product_qty).toFixed(0);}},
+			           // {display:'采购数量',name:'tar_product_qty',width:90,align:'right',editor:{type:'int'},render:function(item){return parseFloat(item.tar_product_qty).toFixed(2);}},
+			            {display:'收货数量',name:'product_qty',width:90,id:'num',align:'right',editor:{type:'int'},render:function(item){return parseFloat(item.product_qty).toFixed(2);}},
 // 			            {display:'质检方式',name:'qc_type',width:150,render:function(item){return paramRender(item,'methods',item.qc_type);}
 // 			            ,editor:{type:'select',data:getData('methods'),valueField:'value',textField:'name'}},
 // 			            {display:'质检结果',name:'qc_flag',width:150,render:function(item){return paramRender(item,'result',item.qc_flag);}
@@ -144,6 +144,8 @@
 					data = data.Rows[0];
 					$('#id').val(data.id);
 					$('#state').val(data.state);
+					$('#flow_state').val(data.flow_state);
+					$('#move_type').val(data.move_type);
 					$('#codeS').val(data.code);
 					$('#originS').val(data.origin);
 					$('#partnerInS').val(paramRender(null,'partner_list',data.partner_id));
@@ -216,93 +218,153 @@
 			// 驳回修改处理，即 退回到 制单环节
 			function toDismiss()
 			{
+				if($('#state').val() >= 70 )
+				{
+				$.ligerDialog.error('已确认入库，不能驳回修改，请确认！');
+			   return;
+				}
 				var param=new Object();
 				param.id=$('#id').val();
 				// 驳回后状态被修改
 				param.state="09";
 				param.flow_state="00";
-				upPickingDel(param,'stock.update.picking_state.update','驳回成功','驳回失败');
-				$('#state').val(50);
+				upPickingDel(param,'驳回成功','驳回失败');
+				$('#state').val('09');
 			}
 
 			//确认入库
 			function submitConfirm() {
 			  			
-				if($('#state').val()=='70')
+				if($('#state').val() >= 70 )
 					{
 					$.ligerDialog.error('已确认入库，不能重复确认，请确认！');
 				   return;
 					}
-				else if($('#flow_state').val()=='50')
+				if($('#state').val() < 60 )
 					{
 					$.ligerDialog.error('该单据未打印，不能确认入库，请确认！');
 					return;
 					}
-				else
-					{
-				   if(window.confirm('您确定要提交该项数据吗？')==true)
-    				var param=new Object();
-					param.id=$('#id').val();
-					//
-					param.state='70';
-					// 确认入库后流程为入库完成
-					param.flow_state='30';
+				if ($("#state").val()=='09') {
+					$.ligerDialog.error('已驳回修改，不能确认出库，请确认！');
+					return;
+				}
+ 				$.ligerDialog.confirm('您确定要提交该项数据吗？', function(r) {
+ 					
+		            if (!r)
+			            return;
+		            
+					//修改 商品明细表中的 state='20'	
+					var stock_move_param=new Object();
+					//alert($('#codeS').val());
+					stock_move_param.code=$('#codeS').val();
+					stock_move_param.state='20';
+					 var stock_move_param_J = JSON.stringify(reqObj('u','stock.update.stock_move_state.update',JSON.stringify(stock_move_param)));
+								
+								ajaxSubmit("/cm/rbac/cm.do?m=u", stock_move_param_J, function(data1) {
+									if (data1) {
+										if (parseInt(data1['status']) > 0) {
+											//修改单据的 state ='20'
+											var param1=new Object();
+											param1.id=$('#id').val();
+											// 状态被修改
+											param1.state='70';
+											param1.flow_state='30';
+											upPickingDel(param1,'提交出库成功','提交出库失败');
+						 					$('#state').val('70');
+						 					$('#flow_state').val('30');
+										} else {
+											$.ligerDialog.error('提交失败');
+										}
+									}
+								}, null, false);
+ 				});	
+// 				   if(window.confirm('您确定要提交该项数据吗？')==true)
+//     				var param=new Object();
+// 					param.id=$('#id').val();
+// 					//
+// 					param.state='70';
+// 					// 确认入库后流程为入库完成
+// 					param.flow_state='30';
                 
-					upPickingDel(param,'stock.update.picking_state.update','确认出库成功','确认出库失败');
-					//已提交 40
-					$('#state').val('70');
-					$('#flow_state').val('30');
-					}
+// 					upPickingDel(param,'确认出库成功','确认出库失败');
+// 					//已提交 40
+// 					$('#state').val('70');
+// 					$('#flow_state').val('30');
+					
 		        }
-			//打印处理
+			//打印处理		
 			var printWin;
-			function toPrint(rowid) {	
-				
+			var printFormatUrl='';
+			function toPrint(rowid) {
 				var printFlag =false
 				if(!$('#state').val() >='60'){
-					if(window.confirm('该单据已打印过，请确认是否需要第二次打印？')==true)
-				    printFlag=true;
-// 					$.ligerDialog.error('已打印请勿重复打印，不能打印，请确认！');
-// 					return;					
+					if(window.confirm('该单据已打印过，请确认是否需要再次打印？')==true)
+				    printFlag=true;			
 				}else{
 					printFlag=true;
 				}
-				//alert(printFlag);
 				if(printFlag){
-					//printWin = $.ligerDialog.open({height:600,width:800,url:'./print_stock_pocket_picking.html?id='.concat(defGrid.getRow(rowid).code),title:'打印入库单'});
-					var param=new Object();
-					param.id=$('#id').val();
+					if($('#move_type').val()=='01'){
+						// 原材料采购入库
+						printFormatUrl='./print_purchase_inStock.html?id=';
+					}
+					if($('#move_type').val()=='02'){
+						//产成品入库
+						printFormatUrl='./print_pro_inStock.html?id=';
+					}
+					if($('#move_type').val()=='03'){
+						//生产领用出库
+						printFormatUrl='./print_req_rawMat_outStock.html?id=';
+					}
+					if($('#move_type').val()=='04'){
+						//销售发货
+						printFormatUrl='./print_proSale_outStock.html?id=';
+					}
+					if($('#move_type').val()=='05'){
+						//	原材料退库
+						printFormatUrl='./print_rawMat_back_inStock.html?id=';
+					}
 					
-					param.state="60";
-					// 确认出库后流程为出库完成
-					param.flow_state=$('#flow_state').val();
-                
-					upPickingDel(param,'stock.update.picking_state.update','打印成功','打印失败');
-					//已提交 40
-				
-					$('#state').val('60');
+					if(!printFormatUrl==''){
+						printWin = $.ligerDialog.open({height:600,width:800,url:printFormatUrl.concat($('#codeS').val()),title:'打印入库单'});
+						//reloadPage();
+					}	else{
+						$.ligerDialog.error('打印格式未找到','错误');
+						return;
+					}
+					//
 				}
 			}			
-			
-			function upPickingDel(param1,upSqlConID,successInfo,errorInfo){
-				 var param = JSON.stringify(reqObj('u',upSqlConID,JSON.stringify(param1)));
+			function upPickingDel(param1,successInfo,errorInfo){
+				
+				 var param = JSON.stringify(reqObj('u','stock.update.picking_state.update',JSON.stringify(param1)));
 					
 					ajaxSubmit("/cm/rbac/cm.do?m=u", param, function(data) {
 						if (data) {
-							if (parseInt(data['status']) > 0) {								
+							if (parseInt(data['status']) > 0) {	
+								
 								$.ligerDialog.success(successInfo);
+								//自动刷新
+								toQuery();
 							} else {								
 								$.ligerDialog.error(errorInfo);
 							}
 						}
-					});
+					}, null, false);
+				
+				
 			}
+
 	        function beginEdit(rowid) { 
 	        	pGrid.beginEdit(rowid);
 	        }
 	        function cancelEdit(rowid) { 
 	        	pGrid.cancelEdit(rowid);
 	        }
+	        function reloadPage() {
+	        	window.location = './new_stock_receipy.html?o=m&code='.concat(c_code);
+		    }
 	        function deleteRow(rowid) {
 	            $.ligerDialog.confirm('您确定要删除该项数据吗？', function(r) {
 		            if (!r)
@@ -327,6 +389,7 @@
 	<body style="padding:0;">
 	<input  type="hidden" id="id"/>
 	<input  type="hidden" id="state"/>
+	<input  type="hidden" id="move_type"/>
 	<input  type="hidden" id="flow_state"/>
 		<div id="pageloading"></div>  
 		<div id="layout_main">

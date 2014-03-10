@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-		<title>原材料入库</title>
+		<title>原材料入库制单管理</title>
 		
 		<link rel="stylesheet" type="text/css" href="../css/cm-default.css"  />
 		<link rel="stylesheet" type="text/css" href="../ligerUI/skins/Aqua/css/ligerui-all.css" />
@@ -106,6 +106,8 @@
 				appendAddBtn(openDictDef, "添加原材料入库单");
 				appendModifyBtn(openModify, "编辑原材料入库单");
 				appendDeleteBtn(deleteRow, "删除单据信息");
+				appendSearchBtn(searchRow, "查看单据信息");
+				
 				$("#pageloading").hide();
 				ajaxSubmit("/cm/rbac/cmUser.do?method=getUserInfo", null, function(data) {
 					$('#createUserCodeS').val(data['uid']);
@@ -113,6 +115,19 @@
 				//默认查询全部数据 
 				toQuery();
 			});
+			
+			//通用单据查询 界面
+			function searchRow(){
+				var row = defGrid.getSelectedRow();
+				if (!row) {
+					$.ligerDialog.error('请先选择要查看的单据！','错误');
+					return;
+				}
+				
+				parent.f_addTab('new_search_stockS','单据明细信息','./stock/search_stock_picking.html?o=m&code='.concat(row.code));
+			}
+
+			
 			function sw_opt(item) {
 				var swd = paramRender(item, defGrid.options.param_movein, item.move_in_user);
 				if (!swd)
@@ -131,6 +146,7 @@
 					swd = item.partner_id;
 				return swd;
 			}
+			//
 			function toQuery(item, page, pageSize) {
 				if (!page)
 					page = defGrid.options.page;
@@ -157,58 +173,36 @@
 					defGrid.set({data:data['data']});
 				});
 			}
+			//新增
 			function openDictDef() {
 				parent.f_addTab('new_stockp','新增原材料入库单','./stock/new_stock_picking.html');
 			}
-			
-			function to_quality(rowid) {
-				var row = defGrid.getRow(rowid);
-				//alert(row.state);
- 				if(row.state < 10)
+			//编辑
+			function openModify() {
+				var row = defGrid.getSelectedRow();
+
+				if (!row) {
+					$.ligerDialog.error('请先选择要编辑的原材料入库单记录。','错误');
+					return;
+				}
+				if(row.state >= 10 )
 			    {
-					
-					$.ligerDialog.error('该单据未审核，请先审核！');
+					$.ligerDialog.error('该单据已审核或已提交，不能编辑！');
 				    return;
 				}
-				else{
-			   if(window.confirm('您确定要提交该项数据吗？')==true)
+				parent.f_addTab('modify_stockp','原材料入库单维护','./stock/new_stock_picking.html?o=m&code='.concat(row.code));
+			}
+			//通用单据查询 界面
+			function searchRow(){
+				var row = defGrid.getSelectedRow();
 
-				var param1=new Object();
-				param1.id=row.id;
-				param1.state='20';
-				param1.flow_state='10';
+				if (!row) {
+					$.ligerDialog.error('请先选择要查看的单据！','错误');
+					return;
+				}
 				
-				 var param = JSON.stringify(reqObj('u','stock.update.picking_state.update',JSON.stringify(param1)));
-				
-					ajaxSubmit("/cm/rbac/cm.do?m=u", param, function(data) {
-						if (data) {
-							if (parseInt(data['status']) > 0) {
-								$.ligerDialog.success('提交成功');
-								//toQuery();
-							} else {
-								$.ligerDialog.error('提交失败');
-							}
-						}
-					});
-			//修改 商品明细表中的 state='10'	
-			var stock_move_param=new Object();
-			alert(row.code);
-			stock_move_param.code=row.code;
-			stock_move_param.state='10';
-			 var stock_move_param_J = JSON.stringify(reqObj('u','stock.update.stock_move_state.update',JSON.stringify(stock_move_param)));
-						
-						ajaxSubmit("/cm/rbac/cm.do?m=u", stock_move_param_J, function(data) {
-							if (data) {
-								if (parseInt(data['status']) > 0) {
-									//$.ligerDialog.success('提交成功');
-									toQuery();
-								} else {
-									$.ligerDialog.error('提交失败');
-								}
-							}
-						});
- 				}
-	        }
+				parent.f_addTab('new_search_stockS','单据明细信息','./stock/search_stock_picking.html?o=m&code='.concat(row.code));
+			}
 			// 审核确认
 			function toConfirm(rowid) {
 				var row = defGrid.getRow(rowid);
@@ -220,7 +214,85 @@
                     
 					upPickingDel(param1,'审核成功','审核失败');
 			
-		        }
+		     }
+			//提交质检
+			function to_quality(rowid) {
+				var row = defGrid.getRow(rowid);
+
+				if(row.state < 10)
+			    {					
+					$.ligerDialog.error('该单据未审核，请先审核！');
+				    return;
+				}
+				
+ 				$.ligerDialog.confirm('您确定要提交该项数据吗？', function(r) {
+ 					
+		            if (!r)
+			            return;
+		            
+					//修改 商品明细表中的 state='10'	
+					var stock_move_param=new Object();
+					stock_move_param.code=row.code;
+					stock_move_param.state='10';
+					 var stock_move_param_J = JSON.stringify(reqObj('u','stock.update.stock_move_state.update',JSON.stringify(stock_move_param)));
+								
+								ajaxSubmit("/cm/rbac/cm.do?m=u", stock_move_param_J, function(data1) {
+									if (data1) {
+										if (parseInt(data1['status']) > 0) {
+											//修改单据的 state ='20'
+											var param1=new Object();
+											param1.id=row.id;
+											// 状态被修改
+											param1.state='20';
+											param1.flow_state='10';
+											upPickingDel(param1,'提交质检成功','提交质检失败');
+										} else {
+											$.ligerDialog.error('提交失败');
+										}
+									}
+								},null,false);
+ 				});						
+			}
+// 			//提交质检
+// 			function to_quality(rowid) {
+// 				var row = defGrid.getRow(rowid);
+				
+// 				if(row.state < 10)
+// 			    {					
+// 					$.ligerDialog.error('该单据未审核，请先审核！');
+// 				    return;
+// 				}
+				
+//  				$.ligerDialog.confirm('您确定要提交该项数据吗？', function(r) {
+ 					
+// 		            if (!r)
+// 			            return;
+// // 					//修改 商品明细表中的 state='10'	
+// // 					var stock_move_param=new Object();
+// // 					stock_move_param.code=row.code;
+// // 					stock_move_param.state='10';
+// // 					 var stock_move_param_J = JSON.stringify(reqObj('u','stock.update.stock_move_state.update',JSON.stringify(stock_move_param)));
+								
+// // 								ajaxSubmit("/cm/rbac/cm.do?m=u", stock_move_param_J, function(data1) {
+// // 									if (data1) {
+// // 										if (parseInt(data1['status']) > 0) {
+// // 											//修改单据的 state ='20'
+// // 											var param1=new Object();
+// // 											param1.id=row.id;
+// // 											// 状态被修改
+// // 											param1.state='20';
+// // 											param1.flow_state='10';
+// // 											upPickingDel(param1,'提交质检成功','提交质检失败');
+// // 										} else {
+// // 											$.ligerDialog.error('提交失败');
+// // 										}
+// // 									}
+// // 								});
+// // 						//		
+
+		            
+ 				
+// 	        }
 			
 			function upPickingDel(param1,successInfo,errorInfo){
 				
@@ -241,33 +313,35 @@
 				
 				
 			}
-			function openModify() {
-				var row = defGrid.getSelectedRow();
-				if(row.state >=20)
-			    {
-					$.ligerDialog.error('该单据不能编辑！');
-				    return;
-				}
-				if (!row) {
-					$.ligerDialog.error('请先选择原材料入库单记录。','错误');
-					return;
-				}
-				parent.f_addTab('modify_stockp','原材料入库单维护','./stock/new_stock_picking.html?o=m&code='.concat(row.code));
-			}
-			function toModify(row) {
-				var url = "/cm/rbac/cmDict.do?m=u";
-				ajaxSubmit(url, row, function(data) {
-					if (data) {
-						if (parseInt(data['result']) > 0) {
-							$.ligerDialog.success('保存成功');
-						} else {
-							$.ligerDialog.error('保存失败');
-						}
-					}
-				});
-			}
 
-			 function deleteRow(row) {
+
+			/*	
+				删除处理 
+			*/
+			 function deleteRow(rowid) {
+				 
+				 var row = defGrid.getSelectedRow();
+				if (!row) {
+						$.ligerDialog.error('请先选择要删除的原材料入库单记录。','错误');
+						return;
+					}
+				 if(row.state >= 10 )
+					{
+					 $.ligerDialog.error('该单据已审核或已提交，不能删除！');
+						return;
+					}
+				  
+		            $.ligerDialog.confirm('您确定要删除该项数据吗？', function(r) {
+			            if (!r)
+				            return;
+		                
+		                if (row['__status'] !== 'add')
+		                	toDel(JSON.stringify(row));
+		                defGrid.deleteRow(rowid);
+		            })
+		        }
+			// 删除处理业务处理
+			 function toDel(row) {
 				
 				 var param = JSON.stringify(reqObj('d','stock.delete.stock_move.prckingid',row));
 					ajaxSubmit("/cm/rbac/cm.do?m=d", param, function(data) {
@@ -277,6 +351,7 @@
 						     var param = JSON.stringify(reqObj('d','stock.delete.stock_picking.code',row));
 						      ajaxSubmit("/cm/rbac/cm.do?m=d", param, function(data) {
 								if (parseInt(data['status']) > 0) {
+									toQuery();
 								  $.ligerDialog.success('删除成功');
 								}
 								else{
@@ -305,6 +380,7 @@
 	<body style="padding:0;">
 	<input type="hidden" id="id" />
 	<input type="hidden" id="state" />
+	<input type="hidden" id="flow_state" />	
 	<input type="hidden" id="createUserCodeS" />
 		<div id="pageloading"></div>  
 		<div id="layout_main">
