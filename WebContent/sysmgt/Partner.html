@@ -17,6 +17,7 @@
 		<script type="text/javascript">
 			var defGrid;
 			var userid;
+			var region,org,typeC,trade,lecel,bank;
 			$(function(){
 				$("#layout_main").ligerLayout({
                 });
@@ -111,10 +112,8 @@
 				defGrid.options.dataAction = 'server';
 				appendAddBtn(openUserDef, "添加用户");
 				$("#pageloading").hide();
-			
-			
 				//var org_data = getData('org_list');
-				$("#region_combobox").ligerComboBox({
+				region=$("#region_combobox").ligerComboBox({
 					autocomplete: true,
                 	valueField:'value',
                 	textField:'name',
@@ -123,7 +122,7 @@
                     	$("#Of_Region").val(v);
                 }
 			   });
-				$("#org_combobox").ligerComboBox({
+				org=$("#org_combobox").ligerComboBox({
 					autocomplete: true,
                 	valueField:'value',
                 	textField:'name',
@@ -132,7 +131,7 @@
                     	$("#Dept_ID").val(v);
                 }
 			   });  
-				$("#type_combobox").ligerComboBox({
+				typeC=$("#type_combobox").ligerComboBox({
 					autocomplete: true,
                 	valueField:'value',
                 	textField:'name',
@@ -142,7 +141,7 @@
                 }
 			});
 				
-				$("#trade_combobox").ligerComboBox({
+				trade=$("#trade_combobox").ligerComboBox({
 					autocomplete: true,
                 	valueField:'value',
                 	textField:'name',
@@ -151,7 +150,7 @@
                     	$("#newOf_trade").val(v);
                 }
 			});
-				$("#lecel_combobox").ligerComboBox({
+				lecel=$("#lecel_combobox").ligerComboBox({
 					autocomplete: true,
                 	valueField:'value',
                 	textField:'name',
@@ -161,7 +160,7 @@
                 }
 			});
 
-				$("#bank_combobox").ligerComboBox({
+				bank=$("#bank_combobox").ligerComboBox({
 					autocomplete: true,
                 	valueField:'value',
                 	textField:'name',
@@ -293,6 +292,15 @@
 		    // parent.f_addTab('partner_add'+index+'','新增公司单位','./sysmgt/partner_add.html');
 		            
 				toReset('#new_user_def input,select,textarea');
+				//var region,org,type,trade,lecel,bank
+				
+				region.setValue('');
+				org.setValue('');
+				typeC.setValue('');
+				trade.setValue('');
+				lecel.setValue('');
+				bank.setValue('');
+				
 				addDialog = $.ligerDialog.open({
 					target:$("#new_user_def"),
 					title:"新增往来单位",
@@ -328,7 +336,7 @@
 				var param = new Object();
 				param.code=$("#code").val();
 				param.name = $("#newName").val();
-				param.type = $("#newType").val();
+				param.type = $("#type").val();
 				param.Of_Region= $("#Of_Region").val();
 				param.uuid_code=$("#newuuid_code").val();
 				param.tax_code = $("#newTax_code").val();
@@ -424,7 +432,7 @@
 			<form name="basic-form" method="post" id="basic_form" class="liger-form" data-validate="{}">
 				<div class="line-div">
 					<div class="label-div"><label>编号</label></div>
-					<div class="in-div"><input type="text" class="required s-text txt-def" id="codeS" /></div>
+					<div class="in-div"><input type="text" class="required s-text txt-def" id="code" /></div>
 					<div class="label-div"><label>名称</label></div>
 					<div class="in-div"><input type="text" class="required s-text txt-def" id="newName" /></div>
 				</div>
@@ -437,6 +445,16 @@
 					 
 					<div class="in-div"><input type="text" id="region_combobox" ltype="combobox" class="required" validate="{required:true,minlength:3,maxlength:10,notnull:true}" nullText="不能为空!"/></div>
 					<input type="hidden" id="Of_Region" />
+				</div>	
+				<div class="line-div">
+					<div class="label-div"><label>信用级别</label></div>
+					<div class="in-div"><input type="text" id="lecel_combobox" ltype="combobox" class="required txt-def"/></div>
+					<input type="hidden" id="credit_level" />
+					
+					<div class="label-div"><label>单位类型</label></div>
+					 
+					<div class="in-div"><input type="text" id="type_combobox" ltype="combobox" class="required" validate="{required:true,minlength:3,maxlength:10,notnull:true}" nullText="不能为空!"/></div>
+					<input type="hidden" id="type" />
 				</div>	
 				<div class="line-div">
 					<div class="label-div"><label>组织机构代码证号</label></div>
