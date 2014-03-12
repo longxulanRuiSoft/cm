@@ -23,7 +23,7 @@
 
 
 							// 制单环节：单据状态  state      00 未审核     >>审核 >>    10 已审核     >>提交>>     20已提交                 09 驳回修改
-							// 质检环节：                                               20 待质检    >>质检确认>>  30已质检     >>审核>>      40已审核  >>提交>> 
+							// 质检环节：                                               20 待质检    >>质检确认>>  30已质检     >>审核>>      40已审核  >>提交>>  50已提交
 							// 出入库确认环节                                       50待打印     >>打印>>     60已打印   >>出入库确认>>   70出库完成           
 														
 							// 流程状态 flow_state 00 新建（制单） 10 入库质检     20入、出库确认    30 入、出库完成
@@ -59,7 +59,7 @@
 			            {display:'质检结论',name:'qc_note',width:100},
 			            {display:'备注',width:200,name:'note',align:'left'}
                     ],
-                    pageSize:2,
+                    pageSize:20,
                     usePager: true,
                     dataAction:'server',
                     url: '../common/q.jsp',
@@ -107,7 +107,6 @@
 				appendModifyBtn(openModify, "编辑原材料入库单");
 				appendDeleteBtn(deleteRow, "删除单据信息");
 				appendSearchBtn(searchRow, "查看单据信息");
-				
 				$("#pageloading").hide();
 				ajaxSubmit("/cm/rbac/cmUser.do?method=getUserInfo", null, function(data) {
 					$('#createUserCodeS').val(data['uid']);

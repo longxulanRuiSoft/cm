@@ -15,7 +15,7 @@
 		<script src="../js/common.js" type="text/javascript"></script>
 		<script src="../js/json2.js" type="text/javascript"></script>
 		<script type="text/javascript">
-			var pTree, pGrid;
+		    var pTree, pGrid;
 			var pType = getData('product.type');
 			var pNode;
 			var uomSel, uomPreSel, typeSel;
@@ -73,7 +73,7 @@
                         toQuery(item, 1);
                     },
                     onToLast: function(item) {
-        				var p = parseInt(pGrid.options.total / defGrid.options.pageSize);
+        				var p = parseInt(pGrid.options.total / pGrid.options.pageSize);
         				if (pGrid.options.total % pGrid.options.pageSize > 0)
         					p += 1;
         				toQuery(item, p);
@@ -135,6 +135,7 @@
 				});
 
 				$("#pageloading").hide();
+				
 			});
 			
 			var detailDialog;
@@ -167,13 +168,15 @@
 					});
 				 });
 			}
-			function toQuery() {
-				var page = pGrid.options.page;
-				var pageSize = pGrid.options.pageSize;
-
+			function toQuery(item, page, pageSize) {
+				if (!page)
+					page = pGrid.options.page;
+				if (!pageSize)
+					pageSize = pGrid.options.pageSize;
 				var param = new Object();
 				if (!pNode)
 					pNode = pTree.getSelected().data.code;
+				//alert(pNode);
 				param.code = pNode;
 
 				var data = JSON.stringify(reqObj('q','stock.select.product.query',JSON.stringify(param),'l',true,page,pageSize));
@@ -243,7 +246,7 @@
 				param.busiorg_id = '';
 				param.short_name = '';
 				param.code = $("#codeS").val();
-
+				param.id = $("#codeS").val();
 				var type, entity;
 				if (isU) {
 					type = 'u';
@@ -327,7 +330,7 @@
 			<form id="detail_form" class="liger-form" data-validate="{}">
 				<div class="line-div">
 					<div class="label-div"><label>物料编号</label></div>
-					<div class="in-div"><input type="text" id="codeS" ltype="text" class="readonly diff" readonly="readonly" value="由系统自动生成" /></div>
+					<div class="in-div"><input type="text" id="codeS" ltype="text" class="required diff"   /></div>
 					<div class="label-div"><label>物料名称</label></div>
 					<div class="in-div"><input type="text" id="nameS" ltype="text" class="required diff" /></div>
 				</div>
