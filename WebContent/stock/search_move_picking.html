@@ -159,6 +159,8 @@
 					$('#codeS').val(data.code);
 					$('#state').val(changeParam(data.state));
 					$('#move_type').val(data.move_type);
+					$('#qc_anomaly_sate').val(data.qc_anomaly_sate);
+					$('#qc_note').val(data.qc_note);
 					$('#originS').val(data.origin);
 					$('#partnerInS').val(paramRender(null,'partner_list',data.partner_id));
 					$('#partnerS').val(data.partner_id);
@@ -224,9 +226,10 @@
 					<div class="line-div">
 						<div class="label-div"><label>出库单号</label></div>
 						<div class="in-div"><input type="text" id="codeS" ltype="text" class="readonly diff" readonly="readonly" value="由系统自动生成" /></div>
-						<div class="label-div"><label>采购申请单号</label></div>
+						<div class="label-div"><label>出库申请单号</label></div>
 						<div class="in-div"><input type="text" id="originS" ltype="text" class="required diff" readonly="readonly" /></div>
 					</div>
+					<div class="line-div">
 						<div class="label-div"><label>单据状态</label></div>
 						<div class="in-div"><input type="text" id="state" ltype="text" class="readonly diff" readonly="readonly" value="由系统自动生成" /></div>
 						<div class="label-div"><label>单据类型</label></div>
@@ -238,7 +241,7 @@
 						<input type="text" id="partnerInS" ltype="combobox" class="required diff" />
 						<input type="hidden" id="partnerS" />
 						</div>
-						<div class="label-div"> <label>出库日期</label></div>
+						<div class="label-div"> <label>出货日期</label></div>
 						<div class="in-div"><input type="text" id="predDateS" ltype="date" class="required diff" /></div>
 					</div>
                 	<div class="line-div">
@@ -247,7 +250,7 @@
 						<input type="text" id="warehouseInS" ltype="combobox" class="required diff" />
 						<input type="hidden" id="warehouseS" />
 						</div>
-						<div class="label-div"><label>出货人</label></div>
+						<div class="label-div"><label>收货人</label></div>
 						<div class="in-div"><input type="text" id="moveInS" ltype="combobox" class="required diff" /></div>
 						<input type="hidden" id="moveInIdS" />
 					</div>
