@@ -71,7 +71,7 @@
                         {display:'单据状态',name:'state',width:80,minWidth:60,render:function(item){return paramRender(item,'outStockState',item.state);}},
                         {display:'修改时间',name:'writedate',width:130},
 	                    {display:'出库单号',name:'code',width:130},
-	                    {display:'单据类型',name:'move_type',width:90,minWidth:60,render:function(item){return paramRender(item,'stockBillType',item.move_type);}},
+	                    {display:'单据类型',name:'move_type',width:90,minWidth:60,render:function(item){return paramRender(item,'move_type',item.move_type);}},
 	                    {display:'来源单号',name:'origin',width:130},
 			            //{display:'供应商',name:'partner_id',render:sw_partner,width:190,align:'left'},
 			            //{display:'出库日期',name:'pred_date',width:80},
@@ -293,7 +293,7 @@
 			<div position="center" id="a_center" title="入库单列表">
 				<div id="query_cond" class="fields">
 					<label>出库单号</label><input type="text" class="s-text txt-def" id="codeQ" />
-					<label>单据类型</label><select id="stateS" param="stockBillType" first="" ></select>
+					<label>单据类型</label><select id="stateS" param="move_type" first="" ></select>
 					<label>来源单号</label><input type="text" class="s-text txt-def" id="originQ" />
 					<label>单据状态</label><select id="stateS" param="outStockState" first="" ></select>
 					<input type="button" value="查询" style="margin-left:25px;" onclick="toQuery();" />

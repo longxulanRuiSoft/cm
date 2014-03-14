@@ -19,7 +19,7 @@
                         {display:'单据状态',name:'state',width:90,minWidth:60,render:function(item){return paramRender(item,'maInStockState',item.state);}},
                         {display:'修改时间',name:'writedate',width:130},
                         {display:'入库单号',name:'code',width:130,minWidth:60},
-                        {display:'单据类型',name:'move_type',width:90,minWidth:60,render:function(item){return paramRender(item,'stockBillType',item.move_type);}},
+                        {display:'单据类型',name:'move_type',width:90,minWidth:60,render:function(item){return paramRender(item,'move_type',item.move_type);}},
 	                    {display:'来源单号',name:'origin',width:130},
 			            {display:'供应商',name:'partner_id',render:sw_partner,width:190,align:'left'},
 			            {display:'预计到货日期',name:'pred_date',width:80},
@@ -175,7 +175,7 @@
 			<div position="center" id="a_center" title="原材料入库单列表">
 				<div id="query_cond" class="fields">
 					<label>入库单</label><input type="text" class="s-text-qCond txt-def" id="codeQ" />
-					<label>单据类型</label><input type="text" class="s-text-qCond txt-def" id="codeType" />
+					<label>单据类型</label><select id="stateS" param="move_type" first="" ></select>
 					<label>来源单号</label><input type="text" class="s-text-qCond txt-def" id="originQ" />
 					<label>供应商</label>
 					<select id="partnerQ" param="partner_list" first="" ></select>
