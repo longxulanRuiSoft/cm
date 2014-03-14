@@ -186,8 +186,10 @@
 								<entry key="name" value=":like(lr)" />
 								<entry key="specs" value=":like(lr)" />
 								<entry key="type" value=""/>
+								<entry key="categ_id" value=""/>
 							</map>
 						</property>
+						<property name="order" value="code"/>
 					</bean>
 				</entry>
 				<entry key="product.stock.qty.query">
@@ -380,7 +382,7 @@ VALUES({#stock.picking_move.id},{company_id},{dept_id},{busiorg_id},{picking_id}
 						<property name="sql">
 							<value>
 <![CDATA[INSERT INTO PRODUCT_PRODUCT(ID,Company_ID,Dept_ID,BusiOrg_ID,Type,Categ_ID,Code,Name,Short_Name,Help_Tag,Bar_Code,Specs,Brand,Warranty,Uom_ID,Uom_Precision,Each_Weight,Weight_Unit_ID,Each_Volume,Volume_Unit_ID,Supply_Method,Purchase_Ok,Sale_Ok,Sale_Delay,Desc_Purchase,Produce_Delay,Product_Manager,Procure_Method,Cost_Method,Desc_Feature,Desc_Sale,Loc_Rack,Loc_Row,State,Note,CreateCompany_ID,CreateDate,CreateUser,WriteDate,WriteUser)
-VALUES({#stock.product.id},{#session.USER_INFO.oid},{dept_id},{busiorg_id},{type},{categ_id},{#stock.product.code},{name},{short_name},{help_tag},{bar_code},{specs},{brand},{warranty},{uom_id},{uom_precision},{each_weight:double},{weight_unit_id},{each_volume:double},{volume_unit_id},{supply_method},{purchase_ok},{sale_ok},{sale_delay:int},{desc_purchase},{produce_delay:int},{product_manager},{procure_method},{cost_method},{desc},{desc_sale},{loc_rack},{loc_row},{state},{note},{#session.USER_INFO.oid},{#current_date},{#session.USER_INFO.uid},{writedate},{writeuser})]]>
+VALUES({id},{#session.USER_INFO.oid},{dept_id},{busiorg_id},{type},{categ_id},{code},{name},{short_name},{help_tag},{bar_code},{specs},{brand},{warranty},{uom_id},{uom_precision},{each_weight:double},{weight_unit_id},{each_volume:double},{volume_unit_id},{supply_method},{purchase_ok},{sale_ok},{sale_delay:int},{desc_purchase},{produce_delay:int},{product_manager},{procure_method},{cost_method},{desc},{desc_sale},{loc_rack},{loc_row},{state},{note},{#session.USER_INFO.oid},{#current_date},{#session.USER_INFO.uid},{writedate},{writeuser})]]>
 							</value>
 						</property>
 					</bean>
