@@ -133,15 +133,15 @@
                     	$("#Dept_ID").val(v);
                 }
 			   });  
-				typeC=$("#type_combobox").ligerComboBox({
-					autocomplete: true,
-                	valueField:'value',
-                	textField:'name',
-                	data:get_type_list,
-                	onSelected:function(v,t) {
-                    	$("#newType").val(v);
-                }
-			});
+// 				typeC=$("#type_combobox").ligerComboBox({
+// 					autocomplete: true,
+//                 	valueField:'value',
+//                 	textField:'name',
+//                 	data:get_type_list,
+//                 	onSelected:function(v,t) {
+//                     	$("#newType").val(v);
+//                 }
+// 			});
 				
 				trade=$("#trade_combobox").ligerComboBox({
 					autocomplete: true,
@@ -152,15 +152,15 @@
                     	$("#newOf_trade").val(v);
                 }
 			});
-				lecel=$("#lecel_combobox").ligerComboBox({
-					autocomplete: true,
-                	valueField:'value',
-                	textField:'name',
-                	data:get_level_list,
-                	onSelected:function(v,t) {
-                    	$("#newCredit_level").val(v);
-                }
-			});
+// 				lecel=$("#lecel_combobox").ligerComboBox({
+// 					autocomplete: true,
+//                 	valueField:'value',
+//                 	textField:'name',
+//                 	data:get_level_list,
+//                 	onSelected:function(v,t) {
+//                     	$("#newCredit_level").val(v);
+//                 }
+// 			});
 
 				bank=$("#bank_combobox").ligerComboBox({
 					autocomplete: true,
@@ -298,9 +298,9 @@
 				
 				region.setValue('');
 				org.setValue('');
-				typeC.setValue('');
+// 				typeC.setValue('');
 				trade.setValue('');
-				lecel.setValue('');
+// 				lecel.setValue('');
 				bank.setValue('');
 				
 				addDialog = $.ligerDialog.open({

@@ -36,7 +36,7 @@
 	                onSelect:function(data) {
 		                if (data.data && data.data.leaf == '1') {
 		                	pNode = data.data.code;
-	                		toQuery();
+	                		toQuery(data,1);
 		                }
 		            },
 	                data:pType
@@ -49,7 +49,7 @@
 							return "<a href='javascript:void(0);' class='opt-link' onclick='toUpdate(".concat(rowindex).concat(")'>修改</a> ")
 						        .concat("<a href='javascript:void(0);' class='opt-link' onclick='toDel(").concat(rowindex).concat(")'>删除</a> "); 
 						},frozen:true},
-	                    {display:'类型',name:'categ_id',width:120,minWidth:60,align:'left',render:function(item){return paramRender(item,'product.type2',item.categ_id);}},
+	                    //{display:'类型',name:'categ_id',width:120,minWidth:60,align:'left',render:function(item){return paramRender(item,'product.type2',item.categ_id);}},
 	                    {display:'编号',name:'code',width:160,minWidth:60},
 	                    {display:'名称',name:'name',width:160,minWidth:60,align:'left'},
 	                    {display:'规格/型号',name:'specs',width:120,minWidth:60,align:'left'},
@@ -177,7 +177,7 @@
 				if (!pNode)
 					pNode = pTree.getSelected().data.code;
 				//alert(pNode);
-				param.code = pNode;
+				param.categ_id = pNode;
 
 				var data = JSON.stringify(reqObj('q','stock.select.product.query',JSON.stringify(param),'l',true,page,pageSize));
 				ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {

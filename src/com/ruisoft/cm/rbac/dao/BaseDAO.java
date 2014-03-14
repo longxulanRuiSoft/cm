@@ -491,7 +491,7 @@ public class BaseDAO {
 				}
 			}
 			
-			if (rowNum + 1 == rEnd) {
+			if (rowNum == rEnd - rStart) {
 				rs.afterLast();
 			}
 
