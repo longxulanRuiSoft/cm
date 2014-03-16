@@ -37,10 +37,8 @@
 						{display:'商品编号',name:'code',width:90,textField:'code',valueField:'code'},
 	                    {display:'品名',name:'name',width:190},
 			            {display:'规格/型号',name:'specs',width:100},
-			            {display:'单位',name:'product_uom',width:60},
-			            {display:'品牌',name:'brand',width:80},
-			            {display:'品牌',name:'brand',width:60,render:function(item){return paramRender(item,'brand',item.brand);}
-			            ,editor:{type:'select',data:getData('Brand'),valueField:'value',textField:'name'}},
+			            {display:'单位',name:'product_uom',width:90,render:function(item){return paramRender(item,'uom',item.product_uom);}},
+			            {display:'品牌',name:'brand',width:60,render:function(item){return paramRender(item,'brand',item.brand);}},
 			            {display:'出库数量',name:'product_qty',width:100,align:'right',editor:{type:'string'},render:function(item){return item.product_qty ? parseFloat(item.product_qty).toFixed(2) : '';}}
 			     ],
                     pageSize:20,
@@ -137,7 +135,7 @@
 				if(param==03){
 					str+="生产领用出库";
 				}else if(param==04){
-					srt+="销售发货出库";
+					str+="销售发货出库";
 				}
 				return str;
 			}

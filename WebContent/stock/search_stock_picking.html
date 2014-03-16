@@ -34,32 +34,34 @@
 				]});
 				var query = getQueryString(window.location.toString());
 				opt = query.o;
-				var temp;
 				if (opt) {
 					c_code = query.code;
 					if (opt === 'm') {
 						var param = {code:c_code};
 						var data = JSON.stringify(reqObj('q','stock.select.picking.query',JSON.stringify(param)));
 						ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
-							temp=data['data'].Rows[0];
 							bindVal(data['data']);
 						}, null, false);
 						param = {picking_id:c_code};
 						data = JSON.stringify(reqObj('q','stock.select.move.query',JSON.stringify(param)));
 						ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
-							if(temp.move_type==01){
+							if($("#move_type").val()=='01'){
 								pGridFull = $("#p-div").ligerGrid({
 				                    columns:[
 										{display:'商品编号',name:'code',width:90,textField:'code',valueField:'code'},
 					                    {display:'品名',name:'name',width:190},
 							            {display:'规格/型号',name:'specs',width:100},
-							            {display:'单位',name:'product_uom',width:60},
-							            {display:'品牌',name:'brand',width:80},
-							            {display:'采购数量',name:'tar_product_qty',align:'right',render:function(item){return item.tar_product_qty ? parseFloat(item.tar_product_qty).toFixed(2) : '';}},
-							            {display:'入库数量',name:'product_qty',id:'num',align:'right',render:function(item){return item.product_qty ? parseFloat(item.product_qty).toFixed(2) : '';}},
-							            {display:'采购单价',name:'source_price_unit',align:'right',render:function(item){return item.source_price_unit ? parseFloat(item.source_price_unit).toFixed(2) : '';}},
-							            {display:'入库单价',name:'price_unit',id:'price',align:'right',render:function(item){return item.price_unit ? parseFloat(item.price_unit).toFixed(2) : '';}},
-							            {display:'金额',name:'total',id:'total',align:'right',render:calcTotal}     
+							            {display:'单位',name:'product_uom',width:90,render:function(item){return paramRender(item,'uom',item.product_uom);}},
+							            {display:'品牌',name:'brand',width:60,render:function(item){return paramRender(item,'brand',item.brand);}},
+							            {display:'采购数量',name:'tar_product_qty',width:60,align:'right',render:function(item){return item.tar_product_qty ? parseFloat(item.tar_product_qty).toFixed(2) : '';}},
+							            {display:'入库数量',name:'product_qty',width:60,id:'num',align:'right',render:function(item){return item.product_qty ? parseFloat(item.product_qty).toFixed(2) : '';}},
+							            {display:'采购单价',name:'source_price_unit',width:60,align:'right',render:function(item){return item.source_price_unit ? parseFloat(item.source_price_unit).toFixed(2) : '';}},
+							            {display:'入库单价',name:'price_unit',width:60,id:'price',align:'right',render:function(item){return item.price_unit ? parseFloat(item.price_unit).toFixed(2) : '';}},
+							            {display:'金额',name:'total',id:'total',width:60,align:'right',render:calcTotal},
+							            {display:'质检方式',name:'qc_type',width:80,render:function(item){return paramRender(item,'QCType',item.qc_type);}
+							            },
+							            {display:'质检结果',name:'qc_flag',width:80,render:function(item){return paramRender(item,'QCResult',item.qc_flag);}
+							            }
 				                    ],
 				                    pageSize:20,
 				                    usePager: true,
@@ -82,13 +84,13 @@
 										{display:'商品编号',name:'code',width:90,textField:'code',valueField:'code'},
 					                    {display:'品名',name:'name',width:190},
 							            {display:'规格/型号',name:'specs',width:100},
-							            {display:'单位',name:'product_uom',width:60},
-							            {display:'品牌',name:'brand',width:80},
-							            //{display:'采购数量',name:'tar_product_qty',align:'right',render:function(item){return item.tar_product_qty ? parseFloat(item.tar_product_qty).toFixed(2) : '';}},
-							            {display:'入库数量',name:'product_qty',id:'num',align:'right',render:function(item){return item.product_qty ? parseFloat(item.product_qty).toFixed(2) : '';}},
-							            //{display:'采购单价',name:'source_price_unit',align:'right',render:function(item){return item.source_price_unit ? parseFloat(item.source_price_unit).toFixed(2) : '';}},
-							            {display:'入库单价',name:'price_unit',id:'price',align:'right',render:function(item){return item.price_unit ? parseFloat(item.price_unit).toFixed(2) : '';}},
-							            {display:'金额',name:'total',id:'total',align:'right',render:calcTotal}     
+							            {display:'单位',name:'product_uom',width:90,render:function(item){return paramRender(item,'uom',item.product_uom);}},
+							            {display:'品牌',name:'brand',width:60,render:function(item){return paramRender(item,'brand',item.brand);}},
+							            {display:'入库数量',name:'product_qty',width:60,id:'num',align:'right',editor:{type:'int'},render:function(item){return parseFloat(item.product_qty).toFixed(2);}},
+							            {display:'质检方式',name:'qc_type',width:80,render:function(item){return paramRender(item,'QCType',item.qc_type);}
+							            },
+							            {display:'质检结果',name:'qc_flag',width:80,render:function(item){return paramRender(item,'QCResult',item.qc_flag);}
+							            }
 				                    ],
 				                    pageSize:20,
 				                    usePager: true,
@@ -199,7 +201,8 @@
 					data = data.Rows[0];
 					$('#codeS').val(data.code);
 					$('#state').val(changeParam(data.state));
-					$('#move_type').val(changeType(data.move_type));
+					$('#move_type').val(data.move_type);
+					$('#move_typeS').val(changeType(data.move_type));
 					$('#qc_anomaly_sate').val(data.qc_anomaly_sate);
 					$('#qc_note').val(data.qc_note);
 					$('#originS').val(data.origin);
@@ -260,6 +263,7 @@
 	<body style="padding:0;">
 		<div id="pageloading"></div>  
 		<div id="layout_main">
+		<input type="hidden" id="move_type" />
 			<div position="center" id="a_center" title="基本信息" style="overflow:auto;">
 				<div id="d-menu" class="toolbar"></div>
 				<div style="height:25px;"></div>
@@ -267,20 +271,14 @@
 					<div class="line-div">
 						<div class="label-div"><label>入库单号</label></div>
 						<div class="in-div"><input type="text" id="codeS" ltype="text" class="readonly diff" readonly="readonly" value="由系统自动生成" /></div>
-						<div class="label-div"><label>采购申请单号</label></div>
-						<div class="in-div"><input type="text" id="originS" ltype="text" class="required diff" readonly="readonly" /></div>
-					</div>
-					<div class="line-div">
-						<div class="label-div"><label>入库异常</label></div>
-						<div class="in-div"><input type="text" id="qc_anomaly_sate" ltype="text" class="readonly diff" readonly="readonly" value="由系统自动生成" /></div>
-						<div class="label-div"><label>质检结论</label></div>
-						<div class="in-div"><input type="text" id="qc_note" ltype="text" class="required diff" readonly="readonly" /></div>
+						<div class="label-div"><label>单据类型</label></div>
+						<div class="in-div"><input type="text" id="move_typeS" ltype="text" class="required diff" readonly="readonly" /></div>
 					</div>
 					<div class="line-div">
 						<div class="label-div"><label>单据状态</label></div>
 						<div class="in-div"><input type="text" id="state" ltype="text" class="readonly diff" readonly="readonly" value="由系统自动生成" /></div>
-						<div class="label-div"><label>单据类型</label></div>
-						<div class="in-div"><input type="text" id="move_type" ltype="text" class="required diff" readonly="readonly" /></div>
+						<div class="label-div"><label>来源单据号</label></div>
+						<div class="in-div"><input type="text" id="originS" ltype="text" class="required diff" readonly="readonly" /></div>
 					</div>
                 	<div class="line-div">
 						<div class="label-div"><label>供应商</label></div>
@@ -301,10 +299,16 @@
 						<div class="in-div"><input type="text" id="moveInS" ltype="combobox" class="required diff" /></div>
 						<input type="hidden" id="moveInIdS" />
 					</div>
+					<div class="line-div">
+						<div class="label-div"><label>入库异常</label></div>
+						<div class="in-div"><input type="text" id="qc_anomaly_sate" ltype="text" class="readonly diff" readonly="readonly" value="由系统自动生成" /></div>
+						<div class="label-div"><label>质检结论</label></div>
+						<div class="in-div"><input type="text" id="qc_note" ltype="text" class="required diff" readonly="readonly" /></div>
+					</div>
 					<div class="line-div" style="height:50px;">
 						<div class="label-div"><label>备注</label></div>
 						<div class="in-div" style="width:72%;">
-							<textarea cols="73" rows="2" id="noteS"></textarea>
+							<textarea cols="73" rows="2" id="noteS"  readonly="readonly"></textarea>
 						</div>
 					</div>
 					<div class="line-div">
