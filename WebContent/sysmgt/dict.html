@@ -199,6 +199,7 @@
 						if (parseInt(data['status']) > 0) {
 							$.ligerDialog.success('保存成功', '操作完成', function() {
 							addDialog.hide();
+							
 							toQuery();
 						});
 						} else if (parseInt(data['status']) == -1) {

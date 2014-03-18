@@ -177,21 +177,23 @@
 				var param = new Object();
 				param.code = $("#codeQ").val();
 				param.origin = $("#originQ").val();
-				//param.partner_id = $("#partnerQ").val();
+				param.type='1';
+				param.partner_id = $("#partnerQ").val();
+				param.move_type=$("#move_typeS").val();
 				param.state=$("#stateS").val();
-				// no 是销售发货，yes 生产领用发货
-				if(opt=='no'){
-					 param.move_type='04';
-					// alert(opt);
-				}
-				else {
-                param.move_type='03';
-                //alert(opt);
-				}
+// 				no 是销售发货，yes 生产领用发货
+// 				if(opt=='no'){
+// 					 param.move_type='04';
+// 					// alert(opt);
+// 				}
+// 				else {
+//                 param.move_type='03';
+//                 //alert(opt);
+// 				}
 				
-                param.move_in_user=$('#UserCodeS').val();
+                //param.move_in_user=$('#UserCodeS').val();
                 //处理flow_state  >= 20的数据
-                param.flow_state='20';
+                //param.flow_state='20';
                 //alert($('#UserCodeS').val());
 				var data = JSON.stringify(reqObj('q','stock.select.picking.query',JSON.stringify(param),'l',true,page,pageSize));
 				ajaxSubmit("/cm/rbac/cm.do?m=c", data, function(data) {
@@ -291,10 +293,10 @@
 		<div id="pageloading"></div>  
 		<div id="layout_main">
 			<div position="center" id="a_center" title="入库单列表">
-				<div id="query_cond" class="fields">
-					<label>出库单号</label><input type="text" class="s-text txt-def" id="codeQ" />
-					<label>单据类型</label><select id="stateS" param="move_type" first="" ></select>
-					<label>来源单号</label><input type="text" class="s-text txt-def" id="originQ" />
+				<div id="query_cond" class="fields" style="height:50px;">
+					<label>出库单号</label><input type="text" class="s-text-qCond txt-def" id="codeQ" />
+					<label>单据类型</label><select id="move_typeS" param="move_type" first="" ></select>
+					<label>来源单号</label><input type="text" class="s-text-qCond txt-def" id="originQ" />  
 					<label>单据状态</label><select id="stateS" param="outStockState" first="" ></select>
 					<input type="button" value="查询" style="margin-left:25px;" onclick="toQuery();" />
 					<input type="button" value="清空" onclick="toReset('#codeQ,#originQ,#partnerQ');" />
